@@ -22,8 +22,6 @@ Some tools to build easier in bloxd.io
 
 ㅤ◈ㅤSphere Tools
 
-ㅤ◈ㅤSphere (click) Tools
-
 ㅤ◈ㅤLign Tools
 
 ㅤ◈ㅤRock Tools
