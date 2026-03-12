@@ -1,4 +1,7 @@
-# Code and Usages
+# Codes and Usages
+
+
+
 
 ## 〖〔 Cube / Rectangle Tool 〕〗
 
@@ -288,19 +291,20 @@ Copyright (c) 2026 K4miNoK4mi - World Edit - 06 Plane
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 
-
 ///////////////////////////////////////////////////////////
 // CONFIG
 /////////////////////////////////////////////////////////*/
 
 const WE_OWNER = "K4miNoK4mi"
 
-const axeSlot    = 0
-const axe2Slot   = 1
-const replaceSlot = 2
+const axeSlot = 0
+const replaceSlot = 1
 
-// Plane thickness
-const PLANE_THICKNESS = 1
+// thickness of the plane
+const PLANE_THICKNESS = 0
+
+const BLOCKS_PER_TICK = 60
+const MAX_PLANE_STEPS = 100
 
 ///////////////////////////////////////////////////////////
 // BLOCKS
@@ -327,10 +331,22 @@ let pos2 = null
 let pos3 = null
 let pos4 = null
 
+let pointIndex = 0
+
 let buildQueue = []
-let isBuilding  = false
+let isBuilding = false
+
+let totalQueued = 0
 let totalReplaced = 0
-let totalQueued   = 0
+
+let iu = 0
+let iv = 0
+
+let stepsU = 0
+let stepsV = 0
+
+let p1,p2,p3,p4
+let normal
 
 ///////////////////////////////////////////////////////////
 // UTILS
@@ -349,11 +365,11 @@ function shouldReplace(blockName){
   return REPLACE_BLOCKS.includes(blockName)
 }
 
-function lerp3(a, b, t){
+function lerp3(a,b,t){
   return [
-    a[0] + (b[0]-a[0]) * t,
-    a[1] + (b[1]-a[1]) * t,
-    a[2] + (b[2]-a[2]) * t,
+    a[0] + (b[0]-a[0])*t,
+    a[1] + (b[1]-a[1])*t,
+    a[2] + (b[2]-a[2])*t
   ]
 }
 
@@ -363,62 +379,75 @@ function norm3(v){
 
 function normalize3(v){
   const n = norm3(v)
-  if(n === 0) return [0,0,0]
+  if(n===0) return [0,0,0]
   return [v[0]/n, v[1]/n, v[2]/n]
 }
 
-function cross3(a, b){
+function cross3(a,b){
   return [
-    a[1]*b[2] - a[2]*b[1],
-    a[2]*b[0] - a[0]*b[2],
-    a[0]*b[1] - a[1]*b[0],
+    a[1]*b[2]-a[2]*b[1],
+    a[2]*b[0]-a[0]*b[2],
+    a[0]*b[1]-a[1]*b[0]
   ]
 }
 
 ///////////////////////////////////////////////////////////
-// GENERATE PLANE
+// PLANE GENERATION
 ///////////////////////////////////////////////////////////
 
 function buildPlane(){
-  const p1 = pos1, p2 = pos2, p3 = pos3, p4 = pos4
+  const p1 = pos1
+  const p2 = pos2
+  const p3 = pos3
+  const p4 = pos4
 
-  const d12 = norm3([p2[0]-p1[0], p2[1]-p1[1], p2[2]-p1[2]])
-  const d43 = norm3([p3[0]-p4[0], p3[1]-p4[1], p3[2]-p4[2]])
-  const d14 = norm3([p4[0]-p1[0], p4[1]-p1[1], p4[2]-p1[2]])
-  const d23 = norm3([p3[0]-p2[0], p3[1]-p2[1], p3[2]-p2[2]])
+  const d12 = norm3([p2[0]-p1[0],p2[1]-p1[1],p2[2]-p1[2]])
+  const d43 = norm3([p3[0]-p4[0],p3[1]-p4[1],p3[2]-p4[2]])
+  const d14 = norm3([p4[0]-p1[0],p4[1]-p1[1],p4[2]-p1[2]])
+  const d23 = norm3([p3[0]-p2[0],p3[1]-p2[1],p3[2]-p2[2]])
 
-  const stepsU = Math.ceil(Math.max(d12, d43)) * 2 + 1
-  const stepsV = Math.ceil(Math.max(d14, d23)) * 2 + 1
+  let stepsU = Math.ceil(Math.max(d12,d43))*2+1
+  let stepsV = Math.ceil(Math.max(d14,d23))*2+1
+	
+  // safety limit
+  stepsU = Math.min(stepsU, MAX_PLANE_STEPS)
+  stepsV = Math.min(stepsV, MAX_PLANE_STEPS)
 
-  const edgeU = [p2[0]-p1[0], p2[1]-p1[1], p2[2]-p1[2]]
-  const edgeV = [p4[0]-p1[0], p4[1]-p1[1], p4[2]-p1[2]]
-  const normal = normalize3(cross3(edgeU, edgeV))
+  const edgeU = [p2[0]-p1[0],p2[1]-p1[1],p2[2]-p1[2]]
+  const edgeV = [p4[0]-p1[0],p4[1]-p1[1],p4[2]-p1[2]]
+
+  const normal = normalize3(cross3(edgeU,edgeV))
 
   const seen = new Set()
   const queue = []
 
-  for(let iu = 0; iu <= stepsU; iu++){
-    const u = iu / stepsU
-    const edgeA = lerp3(p1, p2, u)
-    const edgeB = lerp3(p4, p3, u)
+  for(let iu=0; iu<=stepsU; iu++){
 
-    for(let iv = 0; iv <= stepsV; iv++){
-      const v = iv / stepsV
-      const pt = lerp3(edgeA, edgeB, v)
+    const u = iu/stepsU
 
-      for(let t = -PLANE_THICKNESS; t <= PLANE_THICKNESS; t++){
-        const bx = Math.round(pt[0] + normal[0]*t)
-        const by = Math.round(pt[1] + normal[1]*t)
-        const bz = Math.round(pt[2] + normal[2]*t)
+    const edgeA = lerp3(p1,p2,u)
+    const edgeB = lerp3(p4,p3,u)
+
+    for(let iv=0; iv<=stepsV; iv++){
+
+      const v = iv/stepsV
+      const pt = lerp3(edgeA,edgeB,v)
+
+      for(let t=-PLANE_THICKNESS; t<=PLANE_THICKNESS; t++){
+
+        const bx = Math.round(pt[0]+normal[0]*t)
+        const by = Math.round(pt[1]+normal[1]*t)
+        const bz = Math.round(pt[2]+normal[2]*t)
+
         const key = bx+"|"+by+"|"+bz
+
         if(!seen.has(key)){
           seen.add(key)
-          queue.push([bx, by, bz])
+          queue.push([bx,by,bz])
         }
       }
     }
   }
-
   return queue
 }
 
@@ -426,121 +455,156 @@ function buildPlane(){
 // GIVE ITEMS
 ///////////////////////////////////////////////////////////
 
-onPlayerJoin = (pid) => {
+onPlayerJoin = (pid)=>{
   if(!isWE(pid)) return
 
   api.clearInventory(pid)
-
-  api.setItemSlot(pid, axeSlot, "Wood Axe", 1, {
-    customDisplayName: "WE Axe (Border 1)",
-    customDescription: "Click: Pos1 | Alt: Pos2"
+  api.setItemSlot(pid,axeSlot,"Wood Axe",1,{
+    customDisplayName:"Plane Tool",
+    customDescription:"Alt-click: set next point"
+  })
+  api.setItemSlot(pid,replaceSlot,"Green Paintball",1,{
+    customDisplayName:"Generate Plane",
+    customDescription:"Click to build plane"
   })
 
-  api.setItemSlot(pid, axe2Slot, "Stone Axe", 1, {
-    customDisplayName: "WE Axe (Border 2)",
-    customDescription: "Click: Pos3 | Alt: Pos4"
-  })
-
-  api.setItemSlot(pid, replaceSlot, "Green Paintball", 1, {
-    customDisplayName: "Plane Tool",
-    customDescription: "Click: Generate plane"
-  })
 }
 
 ///////////////////////////////////////////////////////////
-// CLICK
+// CLICK EVENTS
 ///////////////////////////////////////////////////////////
 
-onPlayerClick = (pid, wasAltClick) => {
+onPlayerClick = (pid,wasAltClick)=>{
+
   if(!isWE(pid)) return
 
   const held = api.getHeldItem(pid)
   if(!held) return
 
-  const targetInfo = api.getPlayerTargetInfo(pid)
-  if(!targetInfo || !targetInfo.position) return
+  const target = api.getPlayerTargetInfo(pid)
+  if(!target || !target.position) return
 
-  const x = targetInfo.position[0]
-  const y = targetInfo.position[1]
-  const z = targetInfo.position[2]
+  const x = target.position[0]
+  const y = target.position[1]
+  const z = target.position[2]
+
+  /////////////////////////////////////////////////////////
+  // POINT SELECTION
+  /////////////////////////////////////////////////////////
 
   if(held.name === "Wood Axe"){
-    if(!wasAltClick){
-      pos1 = [x, y, z]
-      api.sendMessage(pid, "Pos1 set", {color:"green"})
-    } else {
-      pos2 = [x, y, z]
-      api.sendMessage(pid, "Pos2 set", {color:"yellow"})
+    pointIndex++
+    if(pointIndex===1){
+      pos1=[x,y,z]
+      api.sendMessage(pid,"Pos1 set ("+x+","+y+","+z+")",{color:"green"})
+    }
+    else if(pointIndex===2){
+      pos2=[x,y,z]
+      api.sendMessage(pid,"Pos2 set ("+x+","+y+","+z+")",{color:"yellow"})
+    }
+    else if(pointIndex===3){
+      pos3=[x,y,z]
+      api.sendMessage(pid,"Pos3 set ("+x+","+y+","+z+")",{color:"cyan"})
+    }
+    else if(pointIndex===4){
+      pos4=[x,y,z]
+      api.sendMessage(pid,"Pos4 set ("+x+","+y+","+z+")",{color:"purple"})
+      pointIndex = 0
     }
     return
   }
 
-  if(held.name === "Stone Axe"){
-    if(!wasAltClick){
-      pos3 = [x, y, z]
-      api.sendMessage(pid, "Pos3 set", {color:"cyan"})
-    } else {
-      pos4 = [x, y, z]
-      api.sendMessage(pid, "Pos4 set", {color:"purple"})
-    }
-    return
-  }
+  /////////////////////////////////////////////////////////
+  // START BUILD
+  /////////////////////////////////////////////////////////
 
-  if(held.name === "Green Paintball"){
+  if(held.name==="Green Paintball"){
     startPlane(pid)
   }
 }
 
 ///////////////////////////////////////////////////////////
-// START
+// START PLANE
 ///////////////////////////////////////////////////////////
 
 function startPlane(pid){
-  if(!pos1 || !pos2 || !pos3 || !pos4){
-    api.sendMessage(pid, "Define Pos1 Pos2 Pos3 Pos4 first!", {color:"red"})
+  if(!pos1||!pos2||!pos3||!pos4){
+    api.sendMessage(pid,"Please set 4 points first!",{color:"red"})
     return
   }
-
   if(isBuilding){
-    api.sendMessage(pid, "Already running!", {color:"orange"})
+    api.sendMessage(pid,"Plane generation already running!",{color:"orange"})
     return
   }
 
-  buildQueue = buildPlane()
-  totalQueued   = buildQueue.length
-  totalReplaced = 0
-  isBuilding    = true
+  p1 = pos1
+  p2 = pos2
+  p3 = pos3
+  p4 = pos4
 
-  api.sendMessage(pid, "Plane started (" + totalQueued + " blocks)…", {color:"green"})
+  const d12 = norm3([p2[0]-p1[0],p2[1]-p1[1],p2[2]-p1[2]])
+  const d43 = norm3([p3[0]-p4[0],p3[1]-p4[1],p3[2]-p4[2]])
+
+  const d14 = norm3([p4[0]-p1[0],p4[1]-p1[1],p4[2]-p1[2]])
+  const d23 = norm3([p3[0]-p2[0],p3[1]-p2[1],p3[2]-p2[2]])
+
+  stepsU = Math.ceil(Math.max(d12,d43))*2+1
+  stepsV = Math.ceil(Math.max(d14,d23))*2+1
+
+  const edgeU = [p2[0]-p1[0],p2[1]-p1[1],p2[2]-p1[2]]
+  const edgeV = [p4[0]-p1[0],p4[1]-p1[1],p4[2]-p1[2]]
+
+  normal = normalize3(cross3(edgeU,edgeV))
+  iu = 0
+  iv = 0
+
+  totalReplaced = 0
+  isBuilding = true
+
+  api.sendMessage(pid,"Plane generation started...",{color:"green"})
 }
 
 ///////////////////////////////////////////////////////////
-// TICK
+// TICK PROCESSING
 ///////////////////////////////////////////////////////////
 
-const BLOCKS_PER_TICK = 50
-
-tick = () => {
+tick = ()=>{
   if(!isBuilding) return
-
   let processed = 0
+  while(processed < BLOCKS_PER_TICK){
+    if(iu > stepsU){
+      isBuilding=false
+      api.broadcastMessage(
+        "Plane finished ("+totalReplaced+" blocks placed)",
+        {color:"green"}
+      )
+      return
+    }
+    const u = iu/stepsU
+    const edgeA = lerp3(p1,p2,u)
+    const edgeB = lerp3(p4,p3,u)
+    const v = iv/stepsV
+    const pt = lerp3(edgeA,edgeB,v)
 
-  while(processed < BLOCKS_PER_TICK && buildQueue.length > 0){
-    const [bx, by, bz] = buildQueue.shift()
-    const current = api.getBlock(bx, by, bz)
-    if(shouldReplace(current)){
-      api.setBlock(bx, by, bz, randBlock())
-      totalReplaced++
+    for(let t=-PLANE_THICKNESS;t<=PLANE_THICKNESS;t++){
+
+      const bx = Math.round(pt[0]+normal[0]*t)
+      const by = Math.round(pt[1]+normal[1]*t)
+      const bz = Math.round(pt[2]+normal[2]*t)
+
+      const current = api.getBlock(bx,by,bz)
+
+      if(shouldReplace(current)){
+        api.setBlock(bx,by,bz,randBlock())
+        totalReplaced++
+      }
     }
     processed++
-  }
-
-  if(buildQueue.length === 0){
-    isBuilding = false
-    api.broadcastMessage(
-      "Plane finished! (" + totalReplaced + " blocks placed)",
-      {color:"green"}
-    )
+    iv++
+    if(iv > stepsV){
+      iv = 0
+      iu++
+    }
   }
 }
 ```
