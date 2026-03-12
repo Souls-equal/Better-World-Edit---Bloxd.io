@@ -4,7 +4,7 @@
 
 ### 『 How to use 』
 
-#### 〚 How to init 〛
+#### 〚 Init 〛
 
 To init the code you just have to copy / paste all in the world code. You can open it with F8 or by clicking "World Code" in a code block.
 
