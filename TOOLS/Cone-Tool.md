@@ -1,6 +1,6 @@
 # Code and Usages
 
-## 〖〔 Spike Tool 〕〗
+## 〖〔 Cone Tool 〕〗
 
 ### 『 How to use 』
 
@@ -32,11 +32,9 @@ In addition to the items, there are certain very important things to know how to
 Example :
 
 ```
-const SPIKE_LENGTH = 15
 const BASE_RADIUS = 6
 ```
 
-- SPIKE_LENGTH = height of the spike  
 - BASE_RADIUS = size of the circular base  
 
 4. And very important, the blocks :
@@ -76,24 +74,49 @@ const WE_OWNER = "K4miNoK4mi"
 
 const axeSlot = 0
 const replaceSlot = 1
-
-const SPIKE_LENGTH = 15
-const BASE_RADIUS = 6
+const ANGLE_STEP = 2
+const BASE_RADIUS = 16
+const BLOCKS_PER_TICK = 80
+const STEPS_PER_TICK = 2
 
 let BLOCKS = [
-  "Grass Block",
-  "Lime Concrete",
-  "Lime Wool",
-  "Lime Baked Clay",
-  "Jungle Grass Block",
-  "Lime Planks",
-  "Pine Grass Block",
+  "Obsidian",
+  "Black Concrete",
+  "Obsidian",
+  "Black Concrete",
+  "Obsidian",
+  "Black Concrete",
+  "Obsidian",
+  "Black Concrete",
+  "Obsidian",
+  "Black Concrete",
+  "Black Wool",
+  "Black Wool",
+  "Black Wool",
+  "Black Wool",
+  "Black Wool",
+  "Bedrock",
+  "Bedrock",
+  "Bedrock",
+  "Black Portal",
+  "Purple Wool",
+  "Magenta Wool",
+  "Purple Ceramic",
+  "Purple Portal",
 ]
 
 let REPLACE_BLOCKS = "all"
 
 let center = null
 let spikePoint = null
+
+let blocksToPlace = []
+let currentIndex = 0
+let isBuilding = false
+let isPreparing = false
+
+let visited = {}
+let genParams = null
 
 function randBlock(){
   return BLOCKS[Math.floor(Math.random() * BLOCKS.length)]
@@ -115,17 +138,18 @@ onPlayerJoin = (pid) => {
 
   api.setItemSlot(pid, axeSlot, "Wood Axe", 1, {
     customDisplayName: "WE Axe",
-    customDescription: "Click 1: Center | Click 2: Spike top"
+    customDescription: "Click: Center | Alt Click: Spike top"
   })
 
   api.setItemSlot(pid, replaceSlot, "Green Paintball", 1, {
     customDisplayName: "Spike Tool",
-    customDescription: "Click: Create spike"
+    customDescription: "Click / Alt Click: Create spike"
   })
 }
 
 onPlayerClick = (pid, wasAltClick) => {
   if(!isWE(pid)) return
+  if(wasAltClick) return
 
   const held = api.getHeldItem(pid)
   if(!held) return
@@ -138,13 +162,8 @@ onPlayerClick = (pid, wasAltClick) => {
   const z = targetInfo.position[2]
 
   if(held.name === "Wood Axe"){
-    if(!center){
-      center = [x, y, z]
-      api.sendMessage(pid, "Center set!", {color:"green"})
-    } else {
-      spikePoint = [x, y, z]
-      api.sendMessage(pid, "Spike top set!", {color:"green"})
-    }
+    center = [x, y, z]
+    api.sendMessage(pid, "Center set!", {color:"green"})
     return
   }
 
@@ -153,58 +172,119 @@ onPlayerClick = (pid, wasAltClick) => {
   }
 }
 
-function drawCircle(cx, cy, cz, r){
-  const r2 = r * r
+onPlayerAltAction = (pid, x, y, z, block, targetEId) => {
+  if(!isWE(pid)) return
 
-  for(let x = -r; x <= r; x++){
-    for(let z = -r; z <= r; z++){
+  const held = api.getHeldItem(pid)
+  if(!held) return
 
-      if(x*x + z*z <= r2){
+  if(held.name === "Wood Axe"){
+    spikePoint = [x, y, z]
+    api.sendMessage(pid, "Spike top set!", {color:"green"})
+    return
+  }
 
-        const bx = Math.round(cx + x)
-        const by = Math.round(cy)
-        const bz = Math.round(cz + z)
-
-        const current = api.getBlock(bx,by,bz)
-        if(shouldReplace(current)){
-          api.setBlock(bx,by,bz, randBlock())
-        }
-      }
-    }
+  if(held.name === "Green Paintball"){
+    startReplace(pid)
   }
 }
 
 function startReplace(pid){
   if(!center || !spikePoint){
-    api.sendMessage(pid, "Set center + spike top!", {color:"red"})
+    api.sendMessage(pid, "Set center + spike top first!", {color:"red"})
+    return
+  }
+
+  if(isBuilding || isPreparing){
+    api.sendMessage(pid, "Already running!", {color:"orange"})
     return
   }
 
   const dx = spikePoint[0] - center[0]
   const dy = spikePoint[1] - center[1]
   const dz = spikePoint[2] - center[2]
-
   const length = Math.sqrt(dx*dx + dy*dy + dz*dz)
 
-  const nx = dx / length
-  const ny = dy / length
-  const nz = dz / length
-
-  const steps = SPIKE_LENGTH
-
-  for(let i = 0; i <= steps; i++){
-
-    const t = i / steps
-
-    const cx = center[0] + nx * i
-    const cy = center[1] + ny * i
-    const cz = center[2] + nz * i
-
-    const radius = (1 - t) * BASE_RADIUS
-
-    drawCircle(cx, cy, cz, radius)
+  if(length === 0){
+    api.sendMessage(pid, "Center and spike top are the same!", {color:"red"})
+    return
   }
 
-  api.broadcastMessage("Spike created!", {color:"green"})
+  blocksToPlace = []
+  visited = {}
+  currentIndex = 0
+
+  genParams = {
+    nx: dx / length,
+    ny: dy / length,
+    nz: dz / length,
+    cx: center[0],
+    cy: center[1],
+    cz: center[2],
+    step: 0,
+    steps: Math.ceil(length),
+    length: length
+  }
+
+  isPreparing = true
+  api.sendMessage(pid, "Preparing spike...", {color:"yellow"})
+}
+
+tick = () => {
+  if(isPreparing){
+    const { nx, ny, nz, cx, cy, cz, step, steps, length } = genParams
+    const stepsThisTick = Math.min(STEPS_PER_TICK, steps - step)
+
+    for(let s = 0; s < stepsThisTick; s++){
+      const i = genParams.step
+      const t = i / steps
+
+      const pcx = cx + nx * length * t
+      const pcy = cy + ny * length * t
+      const pcz = cz + nz * length * t
+
+      const radius = (1 - t) * BASE_RADIUS
+
+      for(let angle = 0; angle < 360; angle += ANGLE_STEP){
+        const rad = angle * Math.PI / 180
+        const bx = Math.round(pcx + Math.cos(rad) * radius)
+        const bz = Math.round(pcz + Math.sin(rad) * radius)
+        const by = Math.round(pcy)
+        const key = bx + "," + by + "," + bz
+        if(!visited[key]){
+          visited[key] = true
+          blocksToPlace.push([bx, by, bz])
+        }
+      }
+
+      genParams.step++
+    }
+
+    if(genParams.step >= steps){
+      isPreparing = false
+      isBuilding = true
+      api.broadcastMessage("Building spike... (" + blocksToPlace.length + " blocks)", {color:"green"})
+    }
+    return
+  }
+
+  if(isBuilding){
+    let placed = 0
+
+    while(placed < BLOCKS_PER_TICK && currentIndex < blocksToPlace.length){
+      const [x, y, z] = blocksToPlace[currentIndex]
+      const current = api.getBlock(x, y, z)
+      if(shouldReplace(current)){
+        api.setBlock(x, y, z, randBlock())
+      }
+      currentIndex++
+      placed++
+    }
+
+    if(currentIndex >= blocksToPlace.length){
+      isBuilding = false
+      api.broadcastMessage("Spike finished!", {color:"green"})
+    }
+  }
 }
 ```
