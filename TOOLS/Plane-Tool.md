@@ -365,3 +365,63 @@ tick = ()=>{
 }
 ```
 
+
+### 『 2nd Code to copy [UPGRADE] 』
+
+```js
+/* 
+MIT License
+
+Copyright (c) 2026 K4miNoK4mi - World Edit - 06 Plane + Gradient
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+
+///////////////////////////////////////////////////////////
+// CONFIG
+/////////////////////////////////////////////////////////*/
+
+const WE_OWNER = "K4miNoK4mi"
+
+const axeSlot   = 0
+const replaceSlot = 1
+const gradASlot = 2  // Blue Paintball   → gradient start
+const gradBSlot = 3  // Yellow Paintball → gradient end
+
+// thickness of the plane
+const PLANE_THICKNESS = 0
+
+const BLOCKS_PER_TICK = 60
+const MAX_PLANE_STEPS = 100
+
+// ── GRADIENT DITHER ───────────────────────────────────
+// false → tranches nettes (comportement original)
+// true  → bruit de Perlin appliqué sur t pour des
+//         frontières organiques entre les stops
+const GRADIENT_DITHER = true
+
+// Force du bruit — limité à 1 stop max de décalage
+// Recommandé : entre 0.3 et 0.6
+const DITHER_STRENGTH = 0.99
+
+///////////////////////////////////////////////////////////
+// GRADIENT PALETTE
+// Chaque entrée = un "stop" du dégradé, dans l'ordre.
+// Le dégradé est divisé uniformément entre tous les stops.
+// Chaque stop est un tableau de noms de blocs (choix aléatoire).
+///////////////////////////////////////////////////////////
+
+const GRADIENT = [
+  ["Lime Concrete",  "Lime Wool"],          // 0%   vert clair
+  ["Lime Concrete",  "Lime Baked Clay"],     // 25%  vert clair/moyen
+  ["Green Concrete", "Jungle Grass Block"],  // 50%  vert foncé
+  ["Brown Concrete", "Dirt"],               // 75%  marron clair
+  ["Brown Concrete", "Brown Wool"],         // 100% marron foncé
+]
+
+let REPLACE_BLOCKS = "all"
+
+///////////////////////////////////////////////////////////
+// VARIABLES
+///////////////////////////////////////////////////////////
+}
+```
