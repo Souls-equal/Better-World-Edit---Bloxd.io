@@ -366,7 +366,33 @@ tick = ()=>{
 ```
 
 
-### 『 2nd Code to copy [UPGRADE] 』
+## 〖〔 Plane Tool V2 (+ gradient) 〕〗
+
+### Gradient Features
+- The V2 code introduces advanced gradient functionalities that allow for smooth color transitions in your designs. You can customize gradients using various colors and directions.
+
+### 『 How to use 』
+
+#### 〚 Init 〛
+
+To init the code you just have to copy / paste all in the world code.  
+You can open it with F8 or by clicking "World Code" in a code block.
+
+#### 〚 Items 〛
+
+This upgrade adds several new items, including unique tools and resources that enhance the user experience and expand capabilities:
+ * It add the **Blue Paintball** to set the *gradient start*,
+ * And the **Yellow Paintball** to set the *gradient end*.
+
+#### 〚 Code 〛
+
+In addition to the first Plane-Tool, in this one:
+- Users can configure the gradient settings in the configuration file. Key options include:
+  - `gradientType`: Specify the type of gradient (linear, radial, etc.).
+  - `colorStops`: Define the colors used in the gradient.
+  - `direction`: Set the direction of the gradient effect (horizontal, vertical, diagonal).
+
+### 『 V2 Code to copy 』
 
 ```js
 /* 
