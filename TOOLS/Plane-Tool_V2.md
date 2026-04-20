@@ -1,4 +1,4 @@
-# Usage and Code
+# Codes and Usages
 ## 〖〔 Plane Tool V2 (+ gradient) 〕〗
 
 ### Gradient Features
