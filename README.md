@@ -1,6 +1,9 @@
 # Better World Edit - Bloxd.io
 Some tools to build easier in bloxd.io
 
+## 〖〔 Notice 〕〗
+
+ㅤ◆ㅤMost of the codes are translated by ai
 
 ㅤ◆ㅤEach of them can generate textured shapes.
 
@@ -11,6 +14,23 @@ Some tools to build easier in bloxd.io
 ㅤ◆ㅤAt the launch, tools are provided to make the best use of the codes, their uses are explained for each code.
 
 ㅤ◆ㅤIn other cases, it is necessary to directly modify certain things in the code.
+
+ㅤ◆ㅤYou can access to codes in the Folder
+
+# Full in one version
+
+## 〖〔 Notice 〕〗
+
+
+ㅤ◆ㅤIts the same, but in one tool
+
+
+ㅤ◆ㅤIt use the shop api (you can access it with 'B' by default)
+
+ㅤ◆ㅤIt can lag a little more
+
+
+ㅤ◆ㅤAnd it's harder to modify Code but it's still possible
 
 ## 〖〔 Available Tools List 〕〗
 
