@@ -28,7 +28,11 @@ Some tools to build easier in bloxd.io
 
 ㅤ◈ㅤTree Remover (default) Tools
 
+ㅤ◈ㅤ2D & 3D Noise generation
 
+ㅤ◈ㅤGradient Plane (plane V2) 
+
+ㅤ◈ㅤ
 ```js
 /* 
 MIT License
