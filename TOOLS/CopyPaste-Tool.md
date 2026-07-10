@@ -9,49 +9,56 @@ The CopyPaste Tool allows players to easily copy and paste structures within the
 - **Pasting Structures**: Position the cursor where you want to place the copied structure and use the `Red Paintball`. 
 
 ```js
-/* 
+ /* 
 MIT License
-
-Copyright (c) 2026 K4miNoK4mi - World Edit - 02 Copy & Paste
+Copyright (c) 2026 K4miNoK4mi - World Edit - 03 Direct Copy & Paste
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
-
 
 ///////////////////////////////////////////////////////////
 // CONFIG
 /////////////////////////////////////////////////////////*/
 
-const WE_OWNER = "K4miNoK4mi" // set your username
+const WE_OWNER = "EPICOO00000"
 
 const axeSlot    = 0
-const anchorSlot = 1  // Green Paintball → lock anchor
+const anchorSlot = 1  // Green Paintball → anchor
 const pasteSlot  = 2  // Red Paintball   → paste
+
+// ── Overwrite mode ──
+// true  → Remplace TOUS les blocs à la destination
+// false → Ne place que dans l'Air (préserve les blocs existants à la destination)
+const OVERWRITE = false
+
+// ── Copy Air mode ──
+// true  → On copie aussi l'Air de la source (si OVERWRITE est true, ça efface donc les blocs à la destination là où il y a de l'air dans la sélection)
+// false → On ignore l'Air de la source (les blocs existants à la destination ne sont pas effacés par le vide)
+const COPY_AIR = false
+
+// ── Rate limiting (appels API par tick) ──
+const BLOCKS_PER_TICK = 25
+const TICK_SKIP       = 1   // 1 = chaque tick, 2 = un tick sur deux...
 
 ///////////////////////////////////////////////////////////
 // VARIABLES
 ///////////////////////////////////////////////////////////
 
-let pos1 = null
-let pos2 = null
-
-// Clipboard: array of { dx, dy, dz, block }
-// offsets relative to the min corner (pos1)
-let clipboard = null
-
-// Anchor: locked position before pasting
-let anchor = null
-
-// ── Copy state ──
-let isCopying  = false
-let copyBounds = null
-let copyCurX, copyCurY, copyCurZ
-let copyBuffer = []
-let copyPid    = null
+let pos1   = null   // zone source coin 1
+let pos2   = null   // zone source coin 2
+let anchor = null   // point d'ancrage (référence dans la zone source)
 
 // ── Paste state ──
-let isPasting   = false
-let pasteQueue  = []
-let totalPasted = 0
+let isPasting  = false
+let pastePid   = null
+let pasteCurX, pasteCurY, pasteCurZ  // curseur dans la zone SOURCE
+let pasteEndX, pasteEndY, pasteEndZ
+let pasteOrgX, pasteOrgY, pasteOrgZ  // origine source (min)
+let pasteOffX, pasteOffY, pasteOffZ  // offset source→dest
+let pasteDone  = 0
+let pasteTotal = 0
+
+// ── Tick counter ──
+let tickCounter = 0
 
 ///////////////////////////////////////////////////////////
 // UTILS
@@ -79,22 +86,19 @@ function getBounds(){
 
 onPlayerJoin = (pid) => {
   if(!isWE(pid)) return
-
   api.clearInventory(pid)
 
   api.setItemSlot(pid, axeSlot, "Wood Axe", 1, {
     customDisplayName: "WE Axe",
-    customDescription: "Left: Pos1 | Alt: Pos2 | Auto-copies on both set"
+    customDescription: "Left: Pos1 | Alt: Pos2"
   })
-
   api.setItemSlot(pid, anchorSlot, "Green Paintball", 1, {
     customDisplayName: "Anchor Tool",
-    customDescription: "Click: Lock anchor position"
+    customDescription: "Click: Set anchor point in source zone"
   })
-
   api.setItemSlot(pid, pasteSlot, "Red Paintball", 1, {
     customDisplayName: "Paste Tool",
-    customDescription: "Click: Paste selection here"
+    customDescription: "Click: Paste zone here (direct copy)"
   })
 }
 
@@ -115,67 +119,45 @@ onPlayerClick = (pid, wasAltClick) => {
   const y = targetInfo.position[1]
   const z = targetInfo.position[2]
 
-  // ── AXE: select zone ──────────────────────────────────
+  // ── AXE ───────────────────────────────────────────────
   if(held.name === "Wood Axe"){
     if(!wasAltClick){
       pos1 = [x, y, z]
-      clipboard = null
-      anchor    = null
-      api.sendMessage(pid, "Pos1 set -> " + x + " " + y + " " + z, {color:"green"})
+      api.sendMessage(pid, "Pos1 -> " + x + " " + y + " " + z, {color:"green"})
     } else {
       pos2 = [x, y, z]
-      clipboard = null
-      anchor    = null
-      api.sendMessage(pid, "Pos2 set -> " + x + " " + y + " " + z, {color:"yellow"})
-    }
-
-    if(pos1 && pos2){
-      startCopy(pid)
+      api.sendMessage(pid, "Pos2 -> " + x + " " + y + " " + z, {color:"yellow"})
     }
     return
   }
 
-  // ── GREEN PAINTBALL: lock anchor ──────────────────────
+  // ── GREEN PAINTBALL: anchor ───────────────────────────
   if(held.name === "Green Paintball"){
-
-    if(isCopying){
-      api.sendMessage(pid, "Still copying, please wait...", {color:"orange"})
+    if(isPasting){
+      api.sendMessage(pid, "Paste in progress, wait...", {color:"orange"})
       return
     }
-
-    if(!clipboard){
-      api.sendMessage(pid, "No selection copied yet! Use the axe first.", {color:"red"})
+    if(!pos1 || !pos2){
+      api.sendMessage(pid, "Set Pos1 & Pos2 first (Wood Axe).", {color:"red"})
       return
     }
-
     anchor = [x, y, z]
-    api.sendMessage(pid,
-      "Anchor locked -> " + x + " " + y + " " + z + " | Use Red Paintball to paste.",
-      {color:"green"}
-    )
+    api.sendMessage(pid, "Anchor -> " + x + " " + y + " " + z, {color:"green"})
     return
   }
 
   // ── RED PAINTBALL: paste ──────────────────────────────
   if(held.name === "Red Paintball"){
-
-    if(isCopying){
-      api.sendMessage(pid, "Still copying, please wait...", {color:"orange"})
-      return
-    }
-
-    if(!clipboard){
-      api.sendMessage(pid, "No selection copied yet! Use the axe first.", {color:"red"})
-      return
-    }
-
-    if(!anchor){
-      api.sendMessage(pid, "No anchor set! Use Green Paintball first.", {color:"red"})
-      return
-    }
-
     if(isPasting){
-      api.sendMessage(pid, "Already pasting, please wait...", {color:"orange"})
+      api.sendMessage(pid, "Already pasting, wait...", {color:"orange"})
+      return
+    }
+    if(!pos1 || !pos2){
+      api.sendMessage(pid, "Set Pos1 & Pos2 first (Wood Axe).", {color:"red"})
+      return
+    }
+    if(!anchor){
+      api.sendMessage(pid, "Set anchor first (Green Paintball).", {color:"red"})
       return
     }
 
@@ -185,57 +167,39 @@ onPlayerClick = (pid, wasAltClick) => {
 }
 
 ///////////////////////////////////////////////////////////
-// COPY  (async - spread over ticks)
-///////////////////////////////////////////////////////////
-
-function startCopy(pid){
-  if(isCopying){
-    api.sendMessage(pid, "Already copying!", {color:"orange"})
-    return
-  }
-
-  const b = getBounds()
-  if(!b) return
-
-  const vol = (b.maxX-b.minX+1) * (b.maxY-b.minY+1) * (b.maxZ-b.minZ+1)
-  api.sendMessage(pid, "Copying " + vol + " blocks...", {color:"green"})
-
-  copyBounds = b
-  copyCurX   = b.minX
-  copyCurY   = b.minY
-  copyCurZ   = b.minZ
-  copyBuffer = []
-  copyPid    = pid
-  clipboard  = null
-  isCopying  = true
-}
-
-///////////////////////////////////////////////////////////
-// PASTE
+// PASTE (direct: getBlock source → setBlock dest)
 ///////////////////////////////////////////////////////////
 
 function startPaste(pid, clickX, clickY, clickZ){
-  const offX = clickX - anchor[0]
-  const offY = clickY - anchor[1]
-  const offZ = clickZ - anchor[2]
+  const b = getBounds()
 
-  const b       = getBounds()
-  const originX = b.minX + offX
-  const originY = b.minY + offY
-  const originZ = b.minZ + offZ
+  // Offset = where user clicked minus anchor
+  pasteOffX = clickX - anchor[0]
+  pasteOffY = clickY - anchor[1]
+  pasteOffZ = clickZ - anchor[2]
 
-  pasteQueue = clipboard.map(entry => ({
-    x: originX + entry.dx,
-    y: originY + entry.dy,
-    z: originZ + entry.dz,
-    block: entry.block
-  }))
+  // Cursor starts at source min corner
+  pasteOrgX = b.minX
+  pasteOrgY = b.minY
+  pasteOrgZ = b.minZ
+  pasteCurX = b.minX
+  pasteCurY = b.minY
+  pasteCurZ = b.minZ
+  pasteEndX = b.maxX
+  pasteEndY = b.maxY
+  pasteEndZ = b.maxZ
 
-  totalPasted = 0
-  isPasting   = true
+  pasteTotal = (pasteEndX - pasteOrgX + 1)
+             * (pasteEndY - pasteOrgY + 1)
+             * (pasteEndZ - pasteOrgZ + 1)
+  pasteDone  = 0
+  pastePid   = pid
+  isPasting  = true
 
   api.sendMessage(pid,
-    "Pasting " + pasteQueue.length + " blocks (offset " + offX + " " + offY + " " + offZ + ")...",
+    "Pasting " + pasteTotal + " blocks | offset " +
+    pasteOffX + " " + pasteOffY + " " + pasteOffZ +
+    " | overwrite: " + OVERWRITE + " | copy_air: " + COPY_AIR,
     {color:"red"}
   )
 }
@@ -244,68 +208,86 @@ function startPaste(pid, clickX, clickY, clickZ){
 // TICK
 ///////////////////////////////////////////////////////////
 
-const BLOCKS_PER_TICK = 50
-
 tick = () => {
-
-  // ── async copy ────────────────────────────────────────
-  if(isCopying){
-    const b    = copyBounds
-    const orgX = b.minX
-    const orgY = b.minY
-    const orgZ = b.minZ
-    let processed = 0
-
-    while(processed < BLOCKS_PER_TICK){
-      const block = api.getBlock(copyCurX, copyCurY, copyCurZ)
-      copyBuffer.push({
-        dx:    copyCurX - orgX,
-        dy:    copyCurY - orgY,
-        dz:    copyCurZ - orgZ,
-        block: block
-      })
-      processed++
-
-      copyCurZ++
-      if(copyCurZ > b.maxZ){
-        copyCurZ = b.minZ
-        copyCurX++
-        if(copyCurX > b.maxX){
-          copyCurX = b.minX
-          copyCurY++
-          if(copyCurY > b.maxY){
-            clipboard = copyBuffer
-            isCopying = false
-            api.sendMessage(copyPid,
-              "Copied " + clipboard.length + " blocks! Set an anchor with Green Paintball, then paste with Red Paintball.",
-              {color:"green"}
-            )
-            return
-          }
-        }
-      }
-    }
-    return
-  }
-
-  // ── async paste ───────────────────────────────────────
+  tickCounter++
+  if(tickCounter % TICK_SKIP !== 0) return
   if(!isPasting) return
 
   let processed = 0
-  while(processed < BLOCKS_PER_TICK && pasteQueue.length > 0){
-    const entry = pasteQueue.shift()
-    api.setBlock(entry.x, entry.y, entry.z, entry.block)
-    totalPasted++
-    processed++
-  }
 
-  if(pasteQueue.length === 0){
-    isPasting = false
-    api.broadcastMessage(
-      "Paste finished! (" + totalPasted + " blocks placed)",
-      {color:"green"}
-    )
+  while(processed < BLOCKS_PER_TICK){
+
+    // Source coords
+    const sx = pasteCurX
+    const sy = pasteCurY
+    const sz = pasteCurZ
+
+    // Destination coords
+    const dx = sx + pasteOffX
+    const dy = sy + pasteOffY
+    const dz = sz + pasteOffZ
+
+    // ── 1. Vérification OVERWRITE ──
+    if(!OVERWRITE){
+      const destBlock = api.getBlock(dx, dy, dz)
+      if(destBlock && destBlock !== "Air"){
+        // Skip : on ne touche pas aux blocs existants
+        processed++
+        pasteDone++
+        advanceCursor()
+        if(pasteCurY > pasteEndY){ finishPaste(); return }
+        continue
+      }
+    }
+
+    // ── 2. Lecture du bloc Source ──
+    const srcBlock = api.getBlock(sx, sy, sz)
+
+    // ── 3. Application selon COPY_AIR ──
+    if(srcBlock === "Air"){
+      if(COPY_AIR && OVERWRITE){
+        // On ne pose de l'air que si COPY_AIR=true ET OVERWRITE=true.
+        // (Si OVERWRITE=false, la destination est déjà de l'air, inutile de gâcher un appel API).
+        api.setBlock(dx, dy, dz, "Air")
+      }
+    } else if(srcBlock){
+      // C'est un vrai bloc, on le pose !
+      api.setBlock(dx, dy, dz, srcBlock)
+    }
+
+    processed++
+    pasteDone++
+
+    // Advance cursor through source zone
+    advanceCursor()
+    if(pasteCurY > pasteEndY){
+      finishPaste()
+      return
+    }
   }
 }
 
+///////////////////////////////////////////////////////////
+// CURSOR HELPERS
+///////////////////////////////////////////////////////////
+
+function advanceCursor(){
+  pasteCurZ++
+  if(pasteCurZ > pasteEndZ){
+    pasteCurZ = pasteOrgZ
+    pasteCurX++
+    if(pasteCurX > pasteEndX){
+      pasteCurX = pasteOrgX
+      pasteCurY++
+    }
+  }
+}
+
+function finishPaste(){
+  isPasting = false
+  api.sendMessage(pastePid,
+    "Done! " + pasteDone + " blocks processed.",
+    {color:"green"}
+  )
+}
 ```
