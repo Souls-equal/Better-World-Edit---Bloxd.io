@@ -1,67 +1,28 @@
-# Code and Usages
+# Better World Edit - Bloxd.io
 
-## 〖〔 Tree Remover (default) Tool 〕〗
+## 〖〔 Tree Remover Tool 〕〗
+
+### 『 Overview 』
+
+Removes leaves, logs, and other breakable blocks in a configurable area around your click.
 
 ### 『 How to use 』
 
 #### 〚 Init 〛
 
-To init the code you just have to copy / paste all in the world code.  
-You can open it with F8 or by clicking "World Code" in a code block.
+Copy and paste the full code below into the Bloxd.io world code editor.
+You can open it with **F8** or by clicking **World Code** inside a code block.
 
 #### 〚 Items 〛
 
-The code uses a **single tool**:
+- **Iron Spade** — alt click on a block to remove matching blocks in the configured area.
 
-1. **Iron Spade**  
-- **Alt Click** on a block → Removes all specified blocks in a defined area around the clicked block.
+#### 〚 Config 〛
 
-#### 〚 Code 〛
-
-In addition to the tool, there are several important settings inside the code:
-
-1. **User restriction**  
-Change the username so the tool only works for you:
-
-```
-const user = "YourName"
-```
-
-2. **Breakable blocks**  
-List the blocks you want the tool to remove. Only the base names are used (ignores metadata):
-
-```
-const breakableBlocks = [
-    "Maple Leaves",
-    "Maple Log",
-    "Fruity Maple Leaves",
-    "Vines",
-    "Aspen Leaves",
-    "Aspen Log"
-]
-```
-
-3. **Area size**  
-Controls how far the tool scans around the clicked block in each direction:
-
-```
-const posX = 2, negX = 2
-const posY = 2, negY = 7
-const posZ = 2, negZ = 2
-```
-
-- `posX` / `negX` → range along X axis  
-- `posY` / `negY` → range along Y axis (height)  
-- `posZ` / `negZ` → range along Z axis
-
-4. **Item requirement**  
-The tool only works if the player is holding the **Iron Spade**.  
-You can remove this check if you want it to work with any item or empty hand:
-
-```
-const item = api.getHeldItem(playerId)
-if (!item || item.name !== "Iron Spade") return
-```
+- `user` to lock the tool to your username.
+- `breakableBlocks` to choose which block names are removed.
+- `posX`, `negX`, `posY`, `negY`, `posZ`, and `negZ` to set the scan size.
+- You can remove the held-item check if you want the tool to work without the Iron Spade.
 
 ### 『 Code to copy 』
 

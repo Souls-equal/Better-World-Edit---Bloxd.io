@@ -1,82 +1,30 @@
-# Code and Usages
+# Better World Edit - Bloxd.io
 
 ## 〖〔 Rocks Tool 〕〗
+
+### 『 Overview 』
+
+Creates rough stone formations inside a rectangular selection.
 
 ### 『 How to use 』
 
 #### 〚 Init 〛
 
-To init the code you just have to copy / paste all in the world code.  
-You can open it with F8 or by clicking "World Code" in a code block.
+Copy and paste the full code below into the Bloxd.io world code editor.
+You can open it with **F8** or by clicking **World Code** inside a code block.
 
 #### 〚 Items 〛
 
-The code gives **two tools**, both renamed:
+- **Wood Axe** — normal click sets `Pos1`, alt click sets `Pos2`.
+- **Green Paintball** — starts the rock generation.
 
-1.**Wood Axe**  
-- **Click** → Set Pos1  
-- **Alt Click** → Set Pos2
+#### 〚 Config 〛
 
-2.**Green Paintball**  
-- **Click** → Launch the rock generation between Pos1 and Pos2
-
-#### 〚 Code 〛
-
-In addition to the items, there are several important settings inside the code:
-
-1.**User restriction**  
-Change the username in the config so the tool only works for you:
-
-```
-const WE_OWNER = "YourName"
-```
-
-2.**Item slots**  
-You can change where the items appear in the inventory when the player joins:
-
-```
-const axeSlot
-const replaceSlot
-```
-
-3.**Blocks**  
-You can customize the blocks used to generate rocks. They will be placed randomly to create textured rocks:
-
-```
-let BLOCKS = [
-  "Stone",
-  "Cracked Stone Bricks",
-  "Stone Bricks",
-  "Messy Stone"
-]
-```
-
-4.**Replace blocks**  
-You can define which blocks are allowed to be replaced:
-
-```
-let REPLACE_BLOCKS = "all"
-```
-
-Or only specific blocks:
-
-```
-let REPLACE_BLOCKS = [
-  "Grass Block",
-  "Lime Concrete"
-]
-```
-
-5.**Blocks per tick**  
-Controls the speed of generation:
-
-```
-const BLOCKS_PER_TICK = 200
-```
-
-### 『 Tips 』
-
-You should use it about 3 times in the same place to make the rock denser.
+- `WE_OWNER` to lock the tool to your username.
+- `axeSlot` and `replaceSlot` to change the item slots.
+- `BLOCKS` to define the random rock palette.
+- `REPLACE_BLOCKS` to decide which blocks can be replaced.
+- `BLOCKS_PER_TICK` to control generation speed.
 
 ### 『 Code to copy 』
 
@@ -315,5 +263,4 @@ tick = () => {
 
   }
 }
-
 ```
