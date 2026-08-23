@@ -1,12 +1,33 @@
-# CopyPaste Tool
+# Better World Edit - Bloxd.io
 
-## Description
-The CopyPaste Tool allows players to easily copy and paste structures within the game environment, streamlining building and design processes.
+## 〖〔 Copy & Paste Tool 〕〗
 
-## Usage
-- **Copying Structures**: Select the structure with the `axe`.
-- **Set anchor**: Select the enchor point with the `Green Paintball`.
-- **Pasting Structures**: Position the cursor where you want to place the copied structure and use the `Red Paintball`. 
+### 『 Overview 』
+
+Copies a selection directly from the source area and pastes it somewhere else using an anchor.
+
+### 『 How to use 』
+
+#### 〚 Init 〛
+
+Copy and paste the full code below into the Bloxd.io world code editor.
+You can open it with **F8** or by clicking **World Code** inside a code block.
+
+#### 〚 Items 〛
+
+- **Wood Axe** — normal click sets `Pos1`, alt click sets `Pos2`.
+- **Green Paintball** — sets the source anchor.
+- **Red Paintball** — pastes the copied structure at the target location.
+
+#### 〚 Config 〛
+
+- `WE_OWNER` to lock the tool to your username.
+- `axeSlot`, `anchorSlot`, and `pasteSlot` to change the item slots.
+- `OVERWRITE` to control whether destination blocks are overwritten.
+- `COPY_AIR` to control whether air from the source is copied.
+- `BLOCKS_PER_TICK` and `TICK_SKIP` to control paste speed.
+
+### 『 Code to copy 』
 
 ```js
  /* 
@@ -19,7 +40,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy
 // CONFIG
 /////////////////////////////////////////////////////////*/
 
-const WE_OWNER = "EPICOO00000"
+const WE_OWNER = "K4miNoK4mi"
 
 const axeSlot    = 0
 const anchorSlot = 1  // Green Paintball → anchor

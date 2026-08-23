@@ -1,83 +1,31 @@
-# Code and Usages
+# Better World Edit - Bloxd.io
 
-## 〖〔 Terrain_Noise Tool 〕〗
+## 〖〔 Terrain Noise Tool 〕〗
+
+### 『 Overview 』
+
+Generates either a 3D procedural terrain or a 2D noise map inside a selection.
 
 ### 『 How to use 』
 
 #### 〚 Init 〛
 
-To init the code you just have to copy / paste all in the world code.  
-You can open it with F8 or by clicking "World Code" in a code block.
+Copy and paste the full code below into the Bloxd.io world code editor.
+You can open it with **F8** or by clicking **World Code** inside a code block.
 
 #### 〚 Items 〛
 
-The code gives a **Wooden Axe**, a **Red Paintball** as well as a **Green Paintball**, both renamed.
+- **Wood Axe** — normal click sets `Pos1`, alt click sets `Pos2`.
+- **Green Paintball** — generates the 3D terrain version.
+- **Red Paintball** — generates the 2D color-map version.
 
-1. The axe can be used to set :
-- The **center of the circle** with a normal click
+#### 〚 Config 〛
 
-2. Green Paintball allows you to validate and launch the **terrain replacement in 3D** with a click.
-
-3. Red Paintball allows you to validate and launch the **terrain replacement in 2D** (on the ground) with a click.
-
-#### 〚 Code 〛
-
-In addition to the items, there are certain very important things to know how to change in the code.
-
-1. You have to change the **User of the code**, because only one person can use the tool.
-
-2. It is also possible to change the **location of items when they appear on `onPlayerJoin`**
-
-3. You can change if only block at surface are placed or under one too by setting **SURFACE_ONLY_3D** to true or false.
-
-4. Very important, the blocks :
-
-- It is possible to set a **list of blocks that will be placed randomly** (texturing)
-
-Example :
-
-```
-let TEXTURE_BLOCKS_3D = [
-  "Grass Block",
-  "Lime Concrete",
-  "Lime Wool"
-]
-```
-5. And finally, you can change the height and color the gen
-
-Example:
-
-Color for value (when its 2D)
-```
-const COLOR_BLOCKS = [
-  { value: 0.1, block: "White Wool"          },
-  { value: 0.2, block: "White Chalk"         },
-  { value: 0.3, block: "White Concrete"      },
-  { value: 0.4, block: "Light Gray Chalk"    },
-  { value: 0.5, block: "Light Gray Wool"     },
-  { value: 0.6, block: "Light Gray Concrete" },
-  { value: 0.7, block: "Gray Chalk"          },
-  { value: 0.8, block: "Gray Concrete"       },
-  { value: 0.9, block: "Black Chalk"         },
-  { value: 1.0, block: "Black Concrete"      }
-]
-```
-
-Height for value:
-```
-const HEIGHT_CONFIG = [
-  { value: 0.1, height: 1  },
-  { value: 0.2, height: 2  },
-  { value: 0.3, height: 3  },
-  { value: 0.4, height: 4  },
-  { value: 0.5, height: 5  },
-  { value: 0.6, height: 6  },
-  { value: 0.7, height: 7  },
-  { value: 0.8, height: 8  },
-  { value: 0.9, height: 9  },
-  { value: 1.0, height: 10 }
-]
-```
+- `WE_OWNER` to lock the tool to your username.
+- `SURFACE_ONLY_3D` to place only the top block or full columns.
+- `TEXTURE_BLOCKS_3D` for the 3D palette.
+- `COLOR_BLOCKS` and `HEIGHT_CONFIG` for the 2D/3D mapping.
+- `RECTS_PER_TICK`, `BLOCKS_PER_TICK`, and queue limits to control performance.
 
 ### 『 Code to copy 』
 

@@ -1,41 +1,30 @@
-# Codes and Usages
+# Better World Edit - Bloxd.io
 
 ## 〖〔 Plane Tool 〕〗
+
+### 『 Overview 』
+
+Builds a plane between four selected points, with optional thickness.
 
 ### 『 How to use 』
 
 #### 〚 Init 〛
 
-To init the code you just have to copy / paste all in the world code.  
-You can open it with F8 or by clicking "World Code" in a code block.
+Copy and paste the full code below into the Bloxd.io world code editor.
+You can open it with **F8** or by clicking **World Code** inside a code block.
 
 #### 〚 Items 〛
 
-The code gives two axes and one paintball, all renamed.
+- **Wood Axe** — each click stores the next plane point until 4 points are set.
+- **Green Paintball** — starts the plane generation.
 
-1. The Wood Axe can be used to set the first edge :
-- Pos 1 with the normal click
-- Pos 2 with the alt click
+#### 〚 Config 〛
 
-2. The Stone Axe can be used to set the second edge :
-- Pos 3 with the normal click
-- Pos 4 with the alt click
-
-3. Paintball allows you to validate and launch the plane construction with a click.
-
-#### 〚 Code 〛
-
-In addition to the items, there are certain very important things to know how to change in the code
-
-1. You have to change the User of the code, because only one person can use the tool.
-
-2. It is also possible to change the location of items when they appear on 'onPlayerJoin'
-
-3. You can change the thickness of the generated plane
-
-4. And very important, the blocks :
-- It is possible to set a list of blocks that will be placed randomly (texturing)
-- And you can also choose which blocks will be replaced (or "all")
+- `WE_OWNER` to lock the tool to your username.
+- `axeSlot` and `replaceSlot` to change the item slots.
+- `PLANE_THICKNESS` to make the plane thicker.
+- `MAX_PLANE_STEPS` to cap interpolation density.
+- `BLOCKS` and `REPLACE_BLOCKS` to control placement behavior.
 
 ### 『 Code to copy 』
 

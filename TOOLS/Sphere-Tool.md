@@ -1,82 +1,31 @@
-# Code and Usages
+# Better World Edit - Bloxd.io
 
 ## 〖〔 Sphere Tool 〕〗
+
+### 『 Overview 』
+
+Builds a 3D sphere from a center point, with an optional one-click shortcut.
 
 ### 『 How to use 』
 
 #### 〚 Init 〛
 
-To init the code you just have to copy / paste all in the world code.  
-You can open it with F8 or by clicking "World Code" in a code block.
+Copy and paste the full code below into the Bloxd.io world code editor.
+You can open it with **F8** or by clicking **World Code** inside a code block.
 
 #### 〚 Items 〛
 
-The code gives **three tools**, all renamed:
+- **Wood Axe** — sets the center of the sphere.
+- **Green Paintball** — starts the sphere generation.
+- **Stone Pickaxe** — instantly places a sphere at the targeted block.
 
-1.**Wood Axe**  
-- **Click** → Set the center of the sphere
+#### 〚 Config 〛
 
-2.**Green Paintball**  
-- **Click** → Launch sphere replacement at the set center
-
-3.**Stone Pickaxe** (One-Click Sphere)  
-- **Click** → Instantly sets the center at the targeted block and immediately generates the sphere
-
-#### 〚 Code 〛
-
-In addition to the items, there are several important settings inside the code:
-
-1.**User restriction**  
-Change the username in the config so the tool only works for you:
-
-```
-const WE_OWNER = "YourName"
-```
-
-2.**Item slots**  
-You can change where the items appear in the inventory when the player joins:
-
-```
-const axeSlot
-const replaceSlot
-const oneClickSlot
-```
-
-3.**Sphere radius**  
-Change the radius of the sphere:
-
-```
-const SPHERE_RADIUS = 4
-```
-
-This sets the size of the sphere from the center block.
-
-4.**Blocks**  
-You can customize the blocks used to generate the sphere. They will be placed randomly to create textures:
-
-```
-let BLOCKS = [
-  "Grass Block",
-  "Lime Concrete",
-  "Lime Wool"
-]
-```
-
-5. **Replace blocks**  
-You can define which blocks are allowed to be replaced:
-
-```
-let REPLACE_BLOCKS = "all"
-```
-
-Or only specific blocks:
-
-```
-let REPLACE_BLOCKS = [
-  "Grass Block",
-  "Lime Concrete"
-]
-```
+- `WE_OWNER` to lock the tool to your username.
+- `axeSlot`, `replaceSlot`, and `oneClickSlot` to change the item slots.
+- `SPHERE_RADIUS` to change the size of the sphere.
+- `BLOCKS` to define the random palette used for texturing.
+- `REPLACE_BLOCKS` to decide which blocks can be replaced.
 
 ### 『 Code to copy 』
 

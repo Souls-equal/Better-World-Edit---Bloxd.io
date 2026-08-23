@@ -1,31 +1,34 @@
-# Codes and Usages
-## 〖〔 Plane Tool V2 (+ gradient) 〕〗
+# Better World Edit - Bloxd.io
 
-### Gradient Features
-- The V2 code introduces advanced gradient functionalities that allow for smooth color transitions in your designs. You can customize gradients using various colors and directions.
+## 〖〔 Plane Tool V2 (+ Gradient) 〕〗
+
+### 『 Overview 』
+
+Adds gradient controls and Perlin dithering on top of the classic plane tool.
 
 ### 『 How to use 』
 
 #### 〚 Init 〛
 
-To init the code you just have to copy / paste all in the world code.  
-You can open it with F8 or by clicking "World Code" in a code block.
+Copy and paste the full code below into the Bloxd.io world code editor.
+You can open it with **F8** or by clicking **World Code** inside a code block.
 
 #### 〚 Items 〛
 
-This upgrade adds several new items, including unique tools and resources that enhance the user experience and expand capabilities:
- * It add the **Blue Paintball** to set the *gradient start*,
- * And the **Yellow Paintball** to set the *gradient end*.
+- **Wood Axe** — each click stores the next plane point until 4 points are set.
+- **Green Paintball** — starts the plane generation.
+- **Blue Paintball** — sets the gradient start point.
+- **Yellow Paintball** — sets the gradient end point.
 
-#### 〚 Code 〛
+#### 〚 Config 〛
 
-In addition to the first Plane-Tool, in this one:
-- Users can configure the gradient settings in the configuration file. Key options include:
-  - `gradientType`: Specify the type of gradient (linear, radial, etc.).
-  - `colorStops`: Define the colors used in the gradient.
-  - `direction`: Set the direction of the gradient effect (horizontal, vertical, diagonal).
+- `WE_OWNER` to lock the tool to your username.
+- `PLANE_THICKNESS` and `MAX_PLANE_STEPS` to control the plane shape.
+- `GRADIENT` to define the ordered gradient palette.
+- `GRADIENT_DITHER` to enable or disable noisy blending between stops.
+- `DITHER_STRENGTH` to control how strong the dithering is.
 
-### 『 V2 Code to copy 』
+### 『 Code to copy 』
 
 ```js
 /* 

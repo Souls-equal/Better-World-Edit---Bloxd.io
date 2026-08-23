@@ -1,71 +1,30 @@
-# Code and Usages
+# Better World Edit - Bloxd.io
 
-## 〖〔 Cone Tool 〕〗
+## 〖〔 Cone / Spike Tool 〕〗
+
+### 『 Overview 』
+
+Creates a conical spike from a center point toward a selected top point.
 
 ### 『 How to use 』
 
 #### 〚 Init 〛
 
-To init the code you just have to copy / paste all in the world code.  
-You can open it with F8 or by clicking "World Code" in a code block.
+Copy and paste the full code below into the Bloxd.io world code editor.
+You can open it with **F8** or by clicking **World Code** inside a code block.
 
 #### 〚 Items 〛
 
-The code gives a **Wooden Axe** as well as a **Green Paintball**, both renamed.
+- **Wood Axe** — normal click sets the center, alt click sets the spike top.
+- **Green Paintball** — starts the spike generation.
 
-1. The axe can be used to set :
-- The **center of the spike** with the first click
-- The **top (direction) of the spike** with the second click
+#### 〚 Config 〛
 
-2. Paintball allows you to validate and launch the **spike generation** with a click.
-
-#### 〚 Code 〛
-
-In addition to the items, there are certain very important things to know how to change in the code.
-
-1. You have to change the **User of the code**, because only one person can use the tool.
-
-2. It is also possible to change the **location of items when they appear on `onPlayerJoin`**
-
-3. You can change the **length and base size of the spike**
-
-Example :
-
-```
-const BASE_RADIUS = 6
-```
-
-- BASE_RADIUS = size of the circular base  
-
-4. And very important, the blocks :
-
-- It is possible to set a **list of blocks that will be placed randomly** (texturing)
-- And you can also choose **which blocks will be replaced** (or "all")
-
-Example :
-
-```
-let BLOCKS = [
-  "Grass Block",
-  "Lime Concrete",
-  "Lime Wool"
-]
-```
-
-Replace all blocks:
-
-```
-let REPLACE_BLOCKS = "all"
-```
-
-Or only specific blocks :
-
-```
-let REPLACE_BLOCKS = [
-  "Grass Block",
-  "Lime Concrete"
-]
-```
+- `WE_OWNER` to lock the tool to your username.
+- `axeSlot` and `replaceSlot` to change the item slots.
+- `BASE_RADIUS` to control the base size of the spike.
+- `ANGLE_STEP` and `BLOCKS_PER_TICK` to control quality and speed.
+- `BLOCKS` and `REPLACE_BLOCKS` to control placement behavior.
 
 ### 『 Code to copy 』
 

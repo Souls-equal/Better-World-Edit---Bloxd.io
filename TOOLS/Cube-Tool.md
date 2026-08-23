@@ -1,36 +1,33 @@
-# Codes and Usages 
+# Better World Edit - Bloxd.io
 
 ## 〖〔 Cube / Rectangle Tool 〕〗
+
+### 『 Overview 』
+
+Fills a rectangular selection between two corners with a random block palette.
 
 ### 『 How to use 』
 
 #### 〚 Init 〛
 
-To init the code you just have to copy / paste all in the world code. You can open it with F8 or by clicking "World Code" in a code block.
+Copy and paste the full code below into the Bloxd.io world code editor.
+You can open it with **F8** or by clicking **World Code** inside a code block.
 
 #### 〚 Items 〛
 
-The code gives a "Wooden Axe" as well as a "Green Paintball", both renamed,
+- **Wood Axe** — normal click sets `Pos1`, alt click sets `Pos2`.
+- **Green Paintball** — starts the replacement inside the selected area.
 
-1. The axe can be used to set :
-- Pos 1 with the normal click
-- Pos 2 with the alt click
+#### 〚 Config 〛
 
-2. Paintball allows you to validate and launch construction with a click
-
-#### 〚 Code 〛
-
-In addition to the items, there are certain very important things to know how to change in the code
-
-1. You have to change the User of the code, because only one people can the code.
-
-2. It is also possible to change the location of items when they appear on 'onPlayerJoin'
-
-3. And very important, the blocks :
-- It is possible to set a list of blocks that will be placed randomly (texturing)
-- And you can also choose which blocks will be replaced (or "all")
+- `WE_OWNER` to lock the tool to your username.
+- `axeSlot` and `replaceSlot` to change the item slots.
+- `BLOCKS` to define the random palette used for texturing.
+- `REPLACE_BLOCKS` to decide which blocks can be replaced.
+- `BLOCKS_PER_TICK` to control build speed.
 
 ### 『 Code to copy 』
+
 ```js
 /* 
 MIT License
@@ -235,5 +232,4 @@ tick = () => {
     }
   }
 }
-
 ```

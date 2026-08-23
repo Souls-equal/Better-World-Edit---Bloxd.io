@@ -1,70 +1,30 @@
-# Code and Usages
+# Better World Edit - Bloxd.io
 
 ## 〖〔 Circle Tool 〕〗
+
+### 『 Overview 』
+
+Builds a flat circle around one selected center point.
 
 ### 『 How to use 』
 
 #### 〚 Init 〛
 
-To init the code you just have to copy / paste all in the world code.  
-You can open it with F8 or by clicking "World Code" in a code block.
+Copy and paste the full code below into the Bloxd.io world code editor.
+You can open it with **F8** or by clicking **World Code** inside a code block.
 
 #### 〚 Items 〛
 
-The code gives a **Wooden Axe** as well as a **Green Paintball**, both renamed.
+- **Wood Axe** — sets the center of the circle.
+- **Green Paintball** — starts the circle generation.
 
-1. The axe can be used to set :
-- The **center of the circle** with a normal click
+#### 〚 Config 〛
 
-2. Paintball allows you to validate and launch the **circle replacement** with a click.
-
-#### 〚 Code 〛
-
-In addition to the items, there are certain very important things to know how to change in the code.
-
-1. You have to change the **User of the code**, because only one person can use the tool.
-
-2. It is also possible to change the **location of items when they appear on `onPlayerJoin`**
-
-3. You can change the **radius of the circle**
-
-Example :
-
-```
-const CIRCLE_RADIUS = 10
-```
-
-This value determines how large the circle will be around the selected center.
-
-4. And very important, the blocks :
-
-- It is possible to set a **list of blocks that will be placed randomly** (texturing)
-- And you can also choose **which blocks will be replaced** (or `"all"`)
-
-Example :
-
-```
-let BLOCKS = [
-  "Grass Block",
-  "Lime Concrete",
-  "Lime Wool"
-]
-```
-
-Replace **all blocks**
-
-```
-let REPLACE_BLOCKS = "all"
-```
-
-Or only specific blocks :
-
-```
-let REPLACE_BLOCKS = [
-  "Grass Block",
-  "Lime Concrete"
-]
-```
+- `WE_OWNER` to lock the tool to your username.
+- `axeSlot` and `replaceSlot` to change the item slots.
+- `CIRCLE_RADIUS` to change the size of the circle.
+- `BLOCKS` to define the random palette used for texturing.
+- `REPLACE_BLOCKS` to decide which blocks can be replaced.
 
 ### 『 Code to copy 』
 
@@ -264,5 +224,4 @@ tick = () => {
     }
   }
 }
-
 ```
