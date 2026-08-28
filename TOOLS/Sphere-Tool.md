@@ -99,7 +99,7 @@ function shouldReplace(blockName){
 // GIVE ITEMS
 ///////////////////////////////////////////////////////////
 
-onPlayerJoin = (pid) => {
+export function onPlayerJoin1(pid) {
   if(!isWE(pid)) return
 
   api.clearInventory(pid)
@@ -124,8 +124,7 @@ onPlayerJoin = (pid) => {
 ///////////////////////////////////////////////////////////
 // CLICK
 ///////////////////////////////////////////////////////////
-
-onPlayerClick = (pid, wasAltClick) => {
+export function onPlayerClick(pid, wasAltClick) {
   if(!isWE(pid)) return
 
   const held = api.getHeldItem(pid)
@@ -200,8 +199,8 @@ function startReplace(pid){
 
 const BLOCKS_PER_TICK = 50
 
-tick = () => {
-  if(!isBuilding) return
+export function tick1() {
+if(!isBuilding) return
 
   const b = bounds
   let processed = 0
