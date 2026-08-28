@@ -105,7 +105,7 @@ function getBounds(){
 // GIVE ITEMS
 ///////////////////////////////////////////////////////////
 
-onPlayerJoin = (pid) => {
+export function onPlayerJoin1(pid) {
   if(!isWE(pid)) return
   api.clearInventory(pid)
 
@@ -127,7 +127,7 @@ onPlayerJoin = (pid) => {
 // CLICK
 ///////////////////////////////////////////////////////////
 
-onPlayerClick = (pid, wasAltClick) => {
+export function onPlayerClick1(pid, wasAltClick) {
   if(!isWE(pid)) return
 
   const held = api.getHeldItem(pid)
@@ -229,7 +229,7 @@ function startPaste(pid, clickX, clickY, clickZ){
 // TICK
 ///////////////////////////////////////////////////////////
 
-tick = () => {
+export function tick1() {
   tickCounter++
   if(tickCounter % TICK_SKIP !== 0) return
   if(!isPasting) return
