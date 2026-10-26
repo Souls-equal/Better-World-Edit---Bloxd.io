@@ -12,7 +12,7 @@ Simple World Edit tools for Bloxd.io, with standalone tool versions in `TOOLS/` 
 
 ㅤ◆ㅤEach standalone tool now follows the same documentation format.
 
-ㅤ◆ㅤThe `Full In One` version below now includes the **Path Tool**, the **Layer Fill Tool**, and a full **palette editor category** in the shop.
+ㅤ◆ㅤThe `Full In One` version below now includes the **Path Tool**, the **Layer Fill Tool**, the **Tree Tool**, and a full **palette editor category** in the shop.
 
 ## 〖〔 Standalone Tools 〕〗
 
@@ -40,6 +40,8 @@ Simple World Edit tools for Bloxd.io, with standalone tool versions in `TOOLS/` 
 
 ㅤ◈ㅤPath Tool
 
+ㅤ◈ㅤTree Tool
+
 ㅤ◈ㅤTree Remover Tool
 
 ## 〖〔 Full In One Version 〕〗
@@ -52,7 +54,7 @@ Simple World Edit tools for Bloxd.io, with standalone tool versions in `TOOLS/` 
 
 ㅤ◆ㅤIt is more convenient to use, but also a little heavier than the standalone versions.
 
-ㅤ◆ㅤThis version has been cleaned up, the Path Tool and Layer Fill Tool have been added, and the shop now includes a palette editor category for custom palettes.
+ㅤ◆ㅤThis version has been cleaned up, the Path Tool, Layer Fill Tool, and Tree Tool have been added, and the shop now includes a palette editor category for custom palettes.
 
 ### 『 Available Tools List 』
 
@@ -79,6 +81,8 @@ Simple World Edit tools for Bloxd.io, with standalone tool versions in `TOOLS/` 
 ㅤ◈ㅤLayer Fill
 
 ㅤ◈ㅤPath
+
+ㅤ◈ㅤTree
 
 ㅤ◈ㅤTree Remover
 
@@ -119,6 +123,15 @@ const LAYER_FILL_MAX_BLOCKS = 50000000
 const LAYER_FILL_CONFIRM_THRESHOLD = 1000000
 const LAYER_FILL_CONFIRM_TIMEOUT_TICKS = 300
 const LAYER_FILL_CHUNK_SIZE = 32
+
+const TREE_MAPLE_MARKER_BLOCK = "Lime Wool"
+const TREE_PINE_TOP_MARKER_BLOCK = "Green Wool"
+const TREE_PINE_BOTTOM_MARKER_BLOCK = "Cyan Wool"
+const TREE_MAPLE_VERTICAL_RATIO = 0.78
+const TREE_MAPLE_Y_OFFSET = 1
+const TREE_MAPLE_NOISE_STRENGTH = 0.28
+const TREE_PINE_TIP_EXTRA = 2
+const TREE_PINE_NOISE_STRENGTH = 0.45
 
 ///////////////////////////////////////////////////////////
 // BLOCK MIXES
@@ -184,6 +197,23 @@ const TREE_BREAKABLE = [
   "Aspen Log",
 ]
 
+const BLOCKS_LEAVES = [
+  "Maple Leaves",
+  "Fruity Maple Leaves",
+  "Aspen Leaves",
+]
+
+const TREE_PROTECTED_LOGS = [
+  "Maple Log",
+  "Aspen Log",
+  "Pine Log",
+  "Jungle Log",
+  "Plum Log",
+  "Pear Log",
+  "Cedar Log",
+  "Palm Log",
+]
+
 const GRADIENT = [
   ["Lime Concrete", "Lime Wool"],
   ["Lime Concrete", "Lime Baked Clay"],
@@ -225,12 +255,13 @@ const DEFAULT_PALETTE_LIBRARY = {
   "Grass Mix": [...BLOCKS_GRASS],
   "Rock Mix": [...BLOCKS_ROCK],
   "Path Mix": [...BLOCKS_PATH],
+  "Leaves Mix": [...BLOCKS_LEAVES],
   "Spike Mix": [...BLOCKS_SPIKE],
   "Terrain Mix": [...BLOCKS_TERRAIN_3D],
 }
 
-const STANDARD_BLOCK_OPTIONS = ["Grass Mix", "Rock Mix", "Path Mix"]
-const LAYER_FILL_BLOCK_OPTIONS = ["Air", "Water", "Grass Mix", "Rock Mix", "Path Mix"]
+const STANDARD_BLOCK_OPTIONS = ["Grass Mix", "Rock Mix", "Path Mix", "Leaves Mix"]
+const LAYER_FILL_BLOCK_OPTIONS = ["Air", "Water", "Grass Mix", "Rock Mix", "Path Mix", "Leaves Mix"]
 
 ///////////////////////////////////////////////////////////
 // SHOP CATEGORIES
@@ -272,6 +303,7 @@ const WE_TOOLS = [
   { key: "copy_paste", icon: "fa-solid fa-copy", name: "Copy & Paste", desc: "Copies a selection and pastes it elsewhere with an anchor." },
   { key: "layer_fill", icon: "fa-solid fa-fill-drip", name: "Layer Fill", desc: "Fills a cuboid selection quickly with chunk-safe rectangles." },
   { key: "path", icon: "fa-solid fa-route", name: "Path", desc: "Builds a terrain path or a 3D tube through multiple waypoints." },
+  { key: "tree", icon: "fa-solid fa-tree", name: "Tree", desc: "Builds organic Maple leaf blobs or Pine / Cypress foliage on trunks." },
   { key: "tree_remover", icon: "fa-solid fa-recycle", name: "Tree Remover", desc: "Removes leaves and logs around your click." },
 ]
 
@@ -361,6 +393,16 @@ const TOOL_SETTINGS = {
     { key: "replace_blocks", label: "Blocks to place", options: ["Path Mix", "Grass Mix", "Rock Mix"], default: "Path Mix" },
     { key: "replace_filter", label: "Replace filter", options: ["Path Default", "All blocks", "Air only", "Non-air only"], default: "Path Default" },
     { key: "blocks_per_tick", label: "Speed (blocks/tick)", options: ["50", "100", "200", "400"], default: "100" },
+  ],
+
+  tree: [
+    { key: "maple_radius", label: "Maple blob radius", options: ["2", "3", "4", "5", "6", "8"], default: "4" },
+    { key: "pine_style", label: "Pine / Cypress style", options: ["Pine (Layered)", "Cypress (Tapered)", "Cone (Classic)"], default: "Pine (Layered)" },
+    { key: "pine_radius", label: "Pine / Cypress radius", options: ["2", "3", "4", "5", "6", "8"], default: "4" },
+    { key: "pine_height", label: "Default pine height", options: ["8", "12", "14", "16", "20", "24"], default: "14" },
+    { key: "replace_blocks", label: "Blocks to place", options: STANDARD_BLOCK_OPTIONS, default: "Leaves Mix" },
+    { key: "replace_filter", label: "Replace filter", options: ["Air only", "Keep logs", "All blocks", "Non-air only"], default: "Air only" },
+    { key: "blocks_per_tick", label: "Speed (blocks/tick)", options: ["50", "100", "150", "200", "400"], default: "150" },
   ],
 
   tree_remover: [
@@ -766,6 +808,10 @@ let layerFillState = null
 let layerFillTickCount = 0
 let layerFillPendingConfirm = {}
 
+let treeMaplePoints = {}
+let treePines = {}
+let treeBuildState = null
+
 ///////////////////////////////////////////////////////////
 // PERLIN NOISE
 ///////////////////////////////////////////////////////////
@@ -1031,6 +1077,25 @@ function getPathDepth(pid) {
   return parseInt(getSetting(pid, "path_depth") ?? "2", 10)
 }
 
+function getTreeMapleRadius(pid) {
+  return parseInt(getSetting(pid, "maple_radius") ?? "4", 10)
+}
+
+function getTreePineStyle(pid) {
+  const raw = getSetting(pid, "pine_style") ?? "Pine (Layered)"
+  if(raw.startsWith("Cypress")) return "cypress"
+  if(raw.startsWith("Cone")) return "cone"
+  return "pine"
+}
+
+function getTreePineRadius(pid) {
+  return parseInt(getSetting(pid, "pine_radius") ?? "4", 10)
+}
+
+function getTreePineDefaultHeight(pid) {
+  return parseInt(getSetting(pid, "pine_height") ?? "14", 10)
+}
+
 function getTreeRange(pid) {
   return {
     posX: parseInt(getSetting(pid, "pos_x") ?? "2", 10),
@@ -1061,6 +1126,9 @@ function shouldReplaceFn(pid, blockName, toolKeyOverride = activeTool[pid]) {
 
   if(toolKeyOverride === "path" && filter === "Path Default") {
     return PATH_DEFAULT_REPLACE_BLOCKS.includes(base)
+  }
+  if(filter === "Keep logs") {
+    return !TREE_PROTECTED_LOGS.includes(base) && !base.endsWith(" Log") && !base.endsWith(" Wood")
   }
   if(filter === "Air only") return base === "Air"
   if(filter === "Non-air only") return base !== "Air"
@@ -1259,6 +1327,304 @@ function clearPathWaypoints(pid, silent = false) {
 }
 
 ///////////////////////////////////////////////////////////
+// TREE HELPERS
+///////////////////////////////////////////////////////////
+
+function getTreeMaplePoints(pid) {
+  if(!treeMaplePoints[pid]) treeMaplePoints[pid] = []
+  return treeMaplePoints[pid]
+}
+
+function getTreePineList(pid) {
+  if(!treePines[pid]) treePines[pid] = []
+  return treePines[pid]
+}
+
+function restoreTreeMarker(marker) {
+  if(!marker) return
+  api.setBlock(marker.x, marker.y, marker.z, marker.orig)
+}
+
+function restoreAllTreeMarkers(pid) {
+  const maples = getTreeMaplePoints(pid)
+  for(const pt of maples) restoreTreeMarker(pt)
+
+  const pines = getTreePineList(pid)
+  for(const pine of pines) {
+    restoreTreeMarker(pine.top)
+    restoreTreeMarker(pine.bottom)
+  }
+}
+
+function findTreeOrigBlock(pid, x, y, z) {
+  for(const pt of getTreeMaplePoints(pid)) {
+    if(pt.x === x && pt.y === y && pt.z === z) return pt.orig
+  }
+  for(const pine of getTreePineList(pid)) {
+    if(pine.top && pine.top.x === x && pine.top.y === y && pine.top.z === z) return pine.top.orig
+    if(pine.bottom && pine.bottom.x === x && pine.bottom.y === y && pine.bottom.z === z) return pine.bottom.orig
+  }
+  return api.getBlock(x, y, z)
+}
+
+function addTreeMaplePoint(pid, x, y, z) {
+  const pts = getTreeMaplePoints(pid)
+  const existingIdx = pts.findIndex((pt) => pt.x === x && pt.y === y && pt.z === z)
+  if(existingIdx !== -1) {
+    const removed = pts.splice(existingIdx, 1)[0]
+    restoreTreeMarker(removed)
+    api.sendMessage(pid, "Maple branch point removed. (" + pts.length + " selected)", { color: "orange" })
+    return
+  }
+
+  const orig = findTreeOrigBlock(pid, x, y, z)
+  pts.push({ x, y, z, orig })
+  api.setBlock(x, y, z, TREE_MAPLE_MARKER_BLOCK)
+  api.sendMessage(pid, "Maple branch #" + pts.length + " set at (" + x + ", " + y + ", " + z + ")", { color: "lime" })
+}
+
+function removeLastTreeMaplePoint(pid) {
+  const pts = getTreeMaplePoints(pid)
+  if(pts.length === 0) {
+    api.sendMessage(pid, "No Maple branch points to remove.", { color: "red" })
+    return
+  }
+
+  const removed = pts.pop()
+  restoreTreeMarker(removed)
+  api.sendMessage(pid, "Last Maple branch point removed. (" + pts.length + " left)", { color: "orange" })
+}
+
+function setTreePineTop(pid, x, y, z) {
+  const pines = getTreePineList(pid)
+  const existingIdx = pines.findIndex((p) => p.top.x === x && p.top.y === y && p.top.z === z)
+  if(existingIdx !== -1) {
+    const removed = pines.splice(existingIdx, 1)[0]
+    restoreTreeMarker(removed.top)
+    restoreTreeMarker(removed.bottom)
+    api.sendMessage(pid, "Pine / Cypress removed. (" + pines.length + " selected)", { color: "orange" })
+    return
+  }
+
+  const orig = findTreeOrigBlock(pid, x, y, z)
+  pines.push({
+    top: { x, y, z, orig },
+    bottom: null,
+  })
+  api.setBlock(x, y, z, TREE_PINE_TOP_MARKER_BLOCK)
+  api.sendMessage(
+    pid,
+    "Pine / Cypress #" + pines.length + " TOP set at (" + x + ", " + y + ", " + z + ") — Alt click to set bottom, or validate with Yellow Paintball.",
+    { color: "green" }
+  )
+}
+
+function setTreePineBottom(pid, x, y, z) {
+  const pines = getTreePineList(pid)
+  if(pines.length === 0) {
+    api.sendMessage(pid, "Set the Pine / Cypress TOP first (normal click with Green Paintball)!", { color: "red" })
+    return
+  }
+
+  const currentPine = pines[pines.length - 1]
+  if(currentPine.bottom) restoreTreeMarker(currentPine.bottom)
+
+  const orig = findTreeOrigBlock(pid, x, y, z)
+  currentPine.bottom = { x, y, z, orig }
+
+  if(x !== currentPine.top.x || y !== currentPine.top.y || z !== currentPine.top.z) {
+    api.setBlock(x, y, z, TREE_PINE_BOTTOM_MARKER_BLOCK)
+  }
+
+  const height = Math.abs(currentPine.top.y - y) + 1
+  api.sendMessage(
+    pid,
+    "Pine / Cypress #" + pines.length + " BOTTOM set at (" + x + ", " + y + ", " + z + ") | Height: " + height + " blocks",
+    { color: "aqua" }
+  )
+}
+
+function clearTreeSelections(pid, silent = false) {
+  if(isBuilding && bounds?._mode === "tree" && bounds?._pid === pid) {
+    isBuilding = false
+    bounds = null
+    treeBuildState = null
+    if(!silent) {
+      api.broadcastMessage("Tree build cancelled! (" + totalReplaced + " blocks placed)", { color: "orange" })
+    }
+    return
+  }
+
+  restoreAllTreeMarkers(pid)
+  treeMaplePoints[pid] = []
+  treePines[pid] = []
+
+  if(!silent) {
+    api.sendMessage(pid, "Tree selection cleared.", { color: "aqua" })
+  }
+}
+
+function appendTreeMapleBlob(branchPt, radiusXZ, visitedSet, outBlocks) {
+  const rY = Math.max(2, radiusXZ * TREE_MAPLE_VERTICAL_RATIO)
+  const cx = branchPt.x
+  const cy = branchPt.y + TREE_MAPLE_Y_OFFSET
+  const cz = branchPt.z
+
+  const maxRXZ = Math.ceil(radiusXZ + 1)
+  const maxRY = Math.ceil(rY + 1)
+
+  for(let dy = -maxRY; dy <= maxRY; dy++) {
+    const by = cy + dy
+    const scaledDy = dy < 0 ? dy * 1.15 : dy
+    const ny = scaledDy / rY
+
+    for(let dx = -maxRXZ; dx <= maxRXZ; dx++) {
+      const bx = cx + dx
+      const nx = dx / radiusXZ
+
+      for(let dz = -maxRXZ; dz <= maxRXZ; dz++) {
+        const bz = cz + dz
+        const nz = dz / radiusXZ
+
+        const dist = Math.sqrt(nx * nx + ny * ny + nz * nz)
+        const n = noise3(bx, by, bz)
+        const noisyDist = dist - n * TREE_MAPLE_NOISE_STRENGTH
+
+        const horizDist = Math.sqrt(nx * nx + nz * nz)
+        const isHanging = dy < 0
+          && horizDist >= 0.5
+          && horizDist <= 0.95
+          && ny >= -1.15
+          && noise3(bx * 1.7 + 31, by * 1.7 + 17, bz * 1.7 + 53) > 0.38
+
+        if(noisyDist <= 1.0 || isHanging) {
+          const key = bx + "," + by + "," + bz
+          if(!visitedSet.has(key)) {
+            visitedSet.add(key)
+            outBlocks.push([bx, by, bz])
+          }
+        }
+      }
+    }
+  }
+}
+
+function appendTreePineFoliage(pine, style, baseRadius, defaultHeight, visitedSet, outBlocks) {
+  let top = pine.top
+  let bottom = pine.bottom
+    ? pine.bottom
+    : { x: top.x, y: top.y - defaultHeight + 1, z: top.z }
+
+  if(top.y < bottom.y) {
+    const tmp = top
+    top = bottom
+    bottom = tmp
+  }
+
+  const height = Math.max(2, top.y - bottom.y + 1)
+  const totalHeight = height + TREE_PINE_TIP_EXTRA
+
+  for(let iy = 0; iy <= totalHeight; iy++) {
+    const by = bottom.y + iy
+    const t = iy / totalHeight
+    const axisT = Math.min(1, iy / Math.max(1, height - 1))
+    const cx = bottom.x + (top.x - bottom.x) * axisT
+    const cz = bottom.z + (top.z - bottom.z) * axisT
+
+    let radius = 0
+    if(iy >= totalHeight - 1) {
+      radius = 0.45
+    } else if(style === "cypress") {
+      const flame = Math.sin(Math.PI * Math.pow(t, 0.68))
+      radius = Math.max(0.6, baseRadius * flame)
+    } else if(style === "pine") {
+      const envelope = baseRadius * Math.pow(1 - t, 0.82)
+      const layerPhase = (iy % 3) / 2
+      const layerFactor = 1.08 - 0.35 * layerPhase
+      radius = envelope * layerFactor
+    } else {
+      radius = baseRadius * (1 - t)
+    }
+
+    const boundR = Math.ceil(radius + 1)
+    for(let dx = -boundR; dx <= boundR; dx++) {
+      const bx = Math.round(cx) + dx
+      for(let dz = -boundR; dz <= boundR; dz++) {
+        const bz = Math.round(cz) + dz
+        const dist = Math.sqrt((bx - cx) * (bx - cx) + (bz - cz) * (bz - cz))
+        const n = iy >= totalHeight - 1 ? 0 : noise3(bx, by, bz) * TREE_PINE_NOISE_STRENGTH
+
+        if(dist <= radius + n) {
+          const key = bx + "," + by + "," + bz
+          if(!visitedSet.has(key)) {
+            visitedSet.add(key)
+            outBlocks.push([bx, by, bz])
+          }
+        }
+      }
+    }
+  }
+}
+
+function startTreeBuild(pid) {
+  if(isBusy()) {
+    api.sendMessage(pid, "Already running!", { color: "orange" })
+    return
+  }
+
+  const maples = getTreeMaplePoints(pid)
+  const pines = getTreePineList(pid)
+
+  if(maples.length === 0 && pines.length === 0) {
+    api.sendMessage(
+      pid,
+      "Select Maple branches (Lime Paintball) or a Pine / Cypress (Green Paintball) first!",
+      { color: "red" }
+    )
+    return
+  }
+
+  restoreAllTreeMarkers(pid)
+
+  const visitedSet = new Set()
+  const blocks = []
+  const mapleRadius = getTreeMapleRadius(pid)
+  const pineStyle = getTreePineStyle(pid)
+  const pineRadius = getTreePineRadius(pid)
+  const pineDefaultHeight = getTreePineDefaultHeight(pid)
+
+  for(const branchPt of maples) {
+    appendTreeMapleBlob(branchPt, mapleRadius, visitedSet, blocks)
+  }
+
+  for(const pine of pines) {
+    appendTreePineFoliage(pine, pineStyle, pineRadius, pineDefaultHeight, visitedSet, blocks)
+  }
+
+  const mapleCount = maples.length
+  const pineCount = pines.length
+  treeMaplePoints[pid] = []
+  treePines[pid] = []
+
+  treeBuildState = {
+    pid,
+    blocks,
+    index: 0,
+    blockList: getBlockList(pid),
+  }
+
+  totalReplaced = 0
+  isBuilding = true
+  activePid = pid
+  bounds = { _mode: "tree", _pid: pid }
+
+  api.broadcastMessage(
+    "Tree build started! (" + mapleCount + " Maple branch(es), " + pineCount + " Pine/Cypress, " + blocks.length + " candidate blocks)",
+    { color: "green" }
+  )
+}
+
+///////////////////////////////////////////////////////////
 // GRADIENT HELPER
 ///////////////////////////////////////////////////////////
 
@@ -1444,6 +1810,7 @@ function resetPlayerBuildState(pid) {
   clipboard[pid] = null
   anchor[pid] = null
   clearPathWaypoints(pid, true)
+  clearTreeSelections(pid, true)
 }
 
 ///////////////////////////////////////////////////////////
@@ -1614,6 +1981,26 @@ function giveItems(pid) {
     return
   }
 
+  if(tool === "tree") {
+    api.setItemSlot(pid, 0, "Lime Paintball", 1, {
+      customDisplayName: "Maple Branch Tool",
+      customDescription: "Click: Add branch top | Alt: Remove last",
+    })
+    api.setItemSlot(pid, 1, "Green Paintball", 1, {
+      customDisplayName: "Pine / Cypress Tool",
+      customDescription: "Click: Set top | Alt: Set bottom",
+    })
+    api.setItemSlot(pid, 2, "Yellow Paintball", 1, {
+      customDisplayName: "Validate Tree",
+      customDescription: "Click: Build tree foliage",
+    })
+    api.setItemSlot(pid, 3, "Red Paintball", 1, {
+      customDisplayName: "Clear Selection",
+      customDescription: "Click: Clear points | While building: Cancel",
+    })
+    return
+  }
+
   if(tool === "tree_remover") {
     api.setItemSlot(pid, 0, "Iron Spade", 1, {
       customDisplayName: "Tree Remover",
@@ -1637,11 +2024,36 @@ onPlayerClick = (pid, wasAltClick) => {
     return
   }
 
+  const tool = activeTool[pid]
+
+  if(tool === "tree") {
+    if(held.name === "Yellow Paintball") {
+      startTreeBuild(pid)
+      return
+    }
+    if(held.name === "Red Paintball") {
+      clearTreeSelections(pid)
+      return
+    }
+  }
+
   const target = api.getPlayerTargetInfo(pid)
   if(!target || !target.position) return
 
   const [x, y, z] = target.position
-  const tool = activeTool[pid]
+
+  if(tool === "tree") {
+    if(held.name === "Lime Paintball") {
+      if(wasAltClick) removeLastTreeMaplePoint(pid)
+      else addTreeMaplePoint(pid, x, y, z)
+      return
+    }
+    if(held.name === "Green Paintball") {
+      if(wasAltClick) setTreePineBottom(pid, x, y, z)
+      else setTreePineTop(pid, x, y, z)
+      return
+    }
+  }
 
   if(held.name === "Wood Axe") {
     if(tool === "layer_fill") {
@@ -2683,6 +3095,35 @@ tick = () => {
     if(currentIndex >= blocksToPlace.length) {
       isBuilding = false
       api.broadcastMessage("Spike finished!", { color: "green" })
+    }
+    return
+  }
+
+  if(mode === "tree") {
+    const st = treeBuildState
+    if(!st) {
+      isBuilding = false
+      bounds = null
+      return
+    }
+
+    let processed = 0
+    while(processed < perTick && st.index < st.blocks.length) {
+      const [x, y, z] = st.blocks[st.index]
+      const current = api.getBlock(x, y, z)
+      if(shouldReplaceFn(pid, current, "tree")) {
+        api.setBlock(x, y, z, randFrom(st.blockList))
+        totalReplaced++
+      }
+      st.index++
+      processed++
+    }
+
+    if(st.index >= st.blocks.length) {
+      isBuilding = false
+      bounds = null
+      treeBuildState = null
+      api.broadcastMessage("Tree finished! (" + totalReplaced + " blocks placed)", { color: "green" })
     }
     return
   }
