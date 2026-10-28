@@ -124,7 +124,7 @@ export function onPlayerJoin1(pid) {
 ///////////////////////////////////////////////////////////
 // CLICK
 ///////////////////////////////////////////////////////////
-export function onPlayerClick(pid, wasAltClick) {
+export function onPlayerClick1(pid, wasAltClick) {
   if(!isWE(pid)) return
 
   const held = api.getHeldItem(pid)
