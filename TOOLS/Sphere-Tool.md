@@ -57,13 +57,19 @@ const SPHERE_RADIUS = 4
 ///////////////////////////////////////////////////////////
 
 let BLOCKS = [
-  "Grass Block",
+  /*"Grass Block",
   "Lime Concrete",
   "Lime Wool",
   "Lime Baked Clay",
   "Jungle Grass Block",
   "Lime Planks",
-  "Pine Grass Block",
+  "Pine Grass Block",*/
+  "Patterned White Glass",
+  "White Glass",
+  "White Concrete",
+  "White Chalk",
+  "White Wool",
+  "White Planks"
 ]
 
 let REPLACE_BLOCKS = "all"
