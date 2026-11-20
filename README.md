@@ -44,6 +44,8 @@ Simple World Edit tools for Bloxd.io, with standalone tool versions in `TOOLS/` 
 
 ㅤ◈ㅤTree Remover Tool
 
+ㅤ◈ㅤ[Wood Swap Tool](TOOLS/Wood-Swap-Tool.md) — replace one wood species with another in a selection.
+
 ## 〖〔 Full In One Version 〕〗
 
 ### 『 Notice 』
