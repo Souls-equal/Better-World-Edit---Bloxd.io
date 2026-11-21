@@ -1,10 +1,32 @@
-# Wood Swap Tool
+# Better World Edit - Bloxd.io
 
-## How to use
+## 〖〔 Wood Swap Tool 〕〗
 
-Paste this standalone script into World Code (F8). Set `WE_OWNER` to your username and edit `from` and `to` using the exact capitalization of the wood names. On join, slots 0 and 1 receive the tools.
+### 『 Overview 』
 
-With the **Wood Axe**, click one corner and alt-click the opposite corner. Click with the **Green Paintball** to process the inclusive selection. Only the species word changes, wherever it occurs in the block name: `Maple Log` becomes `Pine Log`. If the resulting block does not exist, the original stays in place.
+Swaps one wood species for another inside a rectangular selection. Only the species name changes: `Maple Log` becomes `Pine Log`. If the new block does not exist, the original stays in place.
+
+### 『 How to use 』
+
+#### 〚 Init 〛
+
+Copy and paste the full code below into the Bloxd.io world code editor.
+You can open it with **F8** or by clicking **World Code** inside a code block.
+Set `WE_OWNER` to your username, then join the world to receive the tools.
+
+#### 〚 Items 〛
+
+- **Wood Axe** — click one corner to set `Pos1`, then alt-click the opposite corner to set `Pos2`.
+- **Green Paintball** — click to swap matching blocks inside the selection, including both corners.
+
+#### 〚 Config 〛
+
+- `from` and `to` set the source and target species. Use the exact capitalization from the block names, as in `const from = "Maple";` and `const to = "Pine";`.
+- `WE_OWNER` restricts the tool to the named player.
+- `axeSlot` and `replaceSlot` set the inventory slots for the axe and paintball (defaults: `0` and `1`).
+- `BLOCKS_PER_TICK` sets how many blocks are checked per tick (default: `50`).
+
+### 『 Code to copy 』
 
 ```js
 const from = "Maple";
