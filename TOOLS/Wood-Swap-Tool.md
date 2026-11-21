@@ -4,7 +4,7 @@
 
 ### 『 Overview 』
 
-Swaps one wood species for another inside a rectangular selection. Only the species name changes: `Maple Log` becomes `Pine Log`. If the new block does not exist, the original stays in place.
+Swaps one wood species for another inside a rectangular selection. By default, only the species name changes: `Maple Log` becomes `Pine Log`. If the new block does not exist, the original stays in place.
 
 ### 『 How to use 』
 
@@ -22,6 +22,7 @@ Set `WE_OWNER` to your username, then join the world to receive the tools.
 #### 〚 Config 〛
 
 - `from` and `to` set the source and target species. Use the exact capitalization from the block names, as in `const from = "Maple";` and `const to = "Pine";`.
+- `SPECIAL_REPLACEMENTS` sets optional exact block-to-block rules. Uncomment the example to turn `Maple Log` into `Pine Planks` instead of `Pine Log`. These rules take priority over `from` / `to` and can also match blocks of any species. An invalid target leaves the original untouched.
 - `WE_OWNER` restricts the tool to the named player.
 - `axeSlot` and `replaceSlot` set the inventory slots for the axe and paintball (defaults: `0` and `1`).
 - `BLOCKS_PER_TICK` sets how many blocks are checked per tick (default: `50`).
@@ -31,6 +32,9 @@ Set `WE_OWNER` to your username, then join the world to receive the tools.
 ```js
 const from = "Maple";
 const to = "Pine";
+const SPECIAL_REPLACEMENTS = new Map([
+  // ["Maple Log", "Pine Planks"], // [exact source name, exact target name]
+]);
 const WE_OWNER = "K4miNoK4mi"
 const axeSlot = 0, replaceSlot = 1
 let pos1 = null, pos2 = null, bounds = null
@@ -47,7 +51,9 @@ const targets = new Map()
 
 function replacement(name){
   if(targets.has(name)) return targets.get(name)
-  const candidate = name.replace(species, () => to)
+  const candidate = SPECIAL_REPLACEMENTS.has(name)
+    ? SPECIAL_REPLACEMENTS.get(name)
+    : name.replace(species, () => to)
   let target = null
   if(candidate !== name){
     try {
