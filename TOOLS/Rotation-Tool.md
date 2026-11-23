@@ -4,7 +4,7 @@
 
 ### 『 Overview 』
 
-Rotates every block of the pointed type inside a rectangular selection by one step: `Black Chalk Bricks Stairs` becomes `Black Chalk Bricks Stairs|meta|rot1`, then `rot2`, `rot3`, and back to `rot0` on the next click. If the rotated block does not exist, the original stays in place.
+Rotates every block of the pointed type inside a rectangular selection by one step: `Black Chalk Bricks Stairs` becomes `Black Chalk Bricks Stairs|meta|rot1`, then `rot2`, `rot3`, `rot4`, and back to `rot1` on the next click. Other meta suffixes are preserved: `Black Chalk Bricks Stairs|meta|rot2|top` becomes `Black Chalk Bricks Stairs|meta|rot3|top`, and the same applies to `|bot`, `|side`, or stair corner variants. If the rotated block does not exist, the original stays in place.
 
 ### 『 How to use 』
 
@@ -21,7 +21,7 @@ Set `WE_OWNER` to your username, then join the world to receive the tools.
 
 #### 〚 Config 〛
 
-- `ROTATION_STEPS` sets the number of rotation steps (default: `4`, i.e. `rot0` to `rot3`).
+- `ROTATION_STEPS` sets the number of rotation steps (default: `4`, i.e. `rot1` to `rot4`).
 - `WE_OWNER` restricts the tool to the named player.
 - `axeSlot` and `rotateSlot` set the inventory slots for the axe and paintball (defaults: `0` and `1`).
 - `BLOCKS_PER_TICK` sets how many blocks are checked per tick (default: `50`).
@@ -42,31 +42,46 @@ function isWE(pid){
   return api.getEntityName(pid) === WE_OWNER
 }
 
-// Block names can carry meta info: "BaseName|meta|rotN".
+// Block names can carry meta info: "BaseName|meta|rotN|top" etc.
 // The base name is everything before the first "|".
 function baseName(name){
   return (name ?? "").split("|")[0]
 }
 
-// Read the current rotation from "BaseName|meta|rotN".
-// A block without rotation meta reads as rot0.
+// Read the current rotation (rot1 to rot4) from "BaseName|meta|rotN|top".
+// A block without rotation reads as 0 (i.e. not rotated yet).
 function currentRotation(name){
   const parts = String(name ?? "").split("|")
-  for(let i = 0; i < parts.length; i++){
-    if(parts[i] === "meta" && parts[i + 1] && parts[i + 1].startsWith("rot")){
-      const value = parseInt(parts[i + 1].slice(3), 10)
-      if(!isNaN(value)) return value
-    }
+  for(const part of parts){
+    const match = /^rot(\d+)$/.exec(part)
+    if(match) return parseInt(match[1], 10)
   }
   return 0
 }
 
-// Compute the next rotation name, or null when the rotated block does not exist.
+// Compute the next rotation name, keeping every meta suffix (meta, top, bot, side, ...),
+// or null when the rotated block does not exist.
 function rotationTarget(name){
   if(rotated.has(name)) return rotated.get(name)
-  const base = baseName(name)
-  const next = (currentRotation(name) + 1) % ROTATION_STEPS
-  const candidate = base + "|meta|rot" + next
+  const parts = String(name ?? "").split("|")
+  const current = currentRotation(name)
+  const next = current >= ROTATION_STEPS ? 1 : current + 1
+
+  let candidate
+  const rotIndex = parts.findIndex((part) => /^rot\d+$/.test(part))
+  if(rotIndex !== -1){
+    // Only bump the rot value, keep the rest of the name untouched.
+    parts[rotIndex] = "rot" + next
+    candidate = parts.join("|")
+  } else {
+    // No rotation yet: insert "|meta|rotN" after the base name
+    // (or right after the meta segment when one exists).
+    const metaIndex = parts.indexOf("meta")
+    const insertAt = metaIndex >= 0 ? metaIndex + 1 : 1
+    parts.splice(insertAt, 0, "meta", "rot" + next)
+    candidate = parts.join("|")
+  }
+
   let target = null
   try {
     const id = api.blockNameToBlockId(candidate)
