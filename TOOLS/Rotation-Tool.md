@@ -60,10 +60,11 @@ function currentRotation(name){
 }
 
 // Compute the next rotation name, keeping every meta suffix (meta, top, bot, side, ...),
-// or null when the rotated block does not exist.
+// or null when the base block does not exist.
 function rotationTarget(name){
   if(rotated.has(name)) return rotated.get(name)
   const parts = String(name ?? "").split("|")
+  const base = parts[0]
   const current = currentRotation(name)
   const next = current >= ROTATION_STEPS ? 1 : current + 1
 
@@ -84,8 +85,10 @@ function rotationTarget(name){
 
   let target = null
   try {
-    const id = api.blockNameToBlockId(candidate)
-    if(id > 0 && api.blockIdToBlockName(id) === candidate) target = candidate
+    // The root block must exist; meta variants (|meta|rotN|top etc.) follow
+    // the documented pattern, and setBlock is protected below, so an invalid
+    // variant only skips its own block instead of blocking the whole selection.
+    if(api.blockNameToBlockId(base) > 0) target = candidate
   } catch(e) { /* No block of this name: leave the original alone. */ }
   rotated.set(name, target)
   return target
@@ -206,8 +209,10 @@ tick = () => {
     const current = api.getBlock(curX, curY, curZ)
     const target = baseName(current) === targetBase ? rotationTarget(current) : null
     if(target){
-      api.setBlock(curX, curY, curZ, target)
-      totalRotated++
+      try {
+        api.setBlock(curX, curY, curZ, target)
+        totalRotated++
+      } catch(e) { /* The game rejected this exact variant: skip this block. */ }
     }
     processed++
 
@@ -224,6 +229,13 @@ tick = () => {
             "Rotation finished! (" + totalRotated + " blocks rotated)",
             {color:"green"}
           )
+          if(totalRotated === 0){
+            api.broadcastMessage(
+              "Nothing rotated: the pointed block type must exist in the selection "
+              + "and its rotated variant must be a valid block name.",
+              {color:"orange"}
+            )
+          }
           return
         }
       }
