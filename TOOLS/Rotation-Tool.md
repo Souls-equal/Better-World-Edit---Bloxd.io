@@ -4,7 +4,13 @@
 
 ### 『 Overview 』
 
-Rotates every block of the pointed type inside a rectangular selection by one step: `Black Chalk Bricks Stairs` becomes `Black Chalk Bricks Stairs|meta|rot1`, then `rot2`, `rot3`, `rot4`, and back to `rot1` on the next click. Other meta suffixes are preserved: `Black Chalk Bricks Stairs|meta|rot2|top` becomes `Black Chalk Bricks Stairs|meta|rot3|top`, and the same applies to `|bot`, `|side`, or stair corner variants. If the rotated block does not exist, the original stays in place.
+Rotates every block of the pointed type inside a rectangular selection. Three modes:
+
+- **Green Paintball** rotates by one step: `Black Chalk Bricks Stairs` becomes `Black Chalk Bricks Stairs|meta|rot1`, then `rot2`, `rot3`, `rot4`, and back to `rot1` on the next click.
+- **Blue Paintball** sets a rotation directly: each click cycles the target rotation (`rot1` → `rot2` → `rot3` → `rot4`) and applies it to every matching block.
+- **Yellow Paintball** sets the half-block placement directly: each click cycles `top` → `bot` → `side` → none and applies it to every matching block.
+
+Other meta suffixes are preserved: `Black Chalk Bricks Stairs|meta|rot2|top` becomes `Black Chalk Bricks Stairs|meta|rot3|top`, and the same applies to `|bot`, `|side`, or stair corner variants. If the resulting block does not exist, the original stays in place.
 
 ### 『 How to use 』
 
@@ -18,24 +24,31 @@ Set `WE_OWNER` to your username, then join the world to receive the tools.
 
 - **Wood Axe** — click one corner to set `Pos1`, then alt-click the opposite corner to set `Pos2`.
 - **Green Paintball** — click on the block type to rotate; every matching block inside the selection advances one rotation step.
+- **Blue Paintball** — click to set every matching block directly to a chosen rotation (each click cycles `rot1` → `rot4` and applies it immediately).
+- **Yellow Paintball** — click to set every matching block directly to a chosen half placement (each click cycles `top` → `bot` → `side` → none and applies it immediately).
 
 #### 〚 Config 〛
 
 - `ROTATION_STEPS` sets the number of rotation steps (default: `4`, i.e. `rot1` to `rot4`).
 - `WE_OWNER` restricts the tool to the named player.
-- `axeSlot` and `rotateSlot` set the inventory slots for the axe and paintball (defaults: `0` and `1`).
+- `axeSlot`, `rotateSlot`, `setRotSlot`, and `setHalfSlot` set the inventory slots for the axe and the three paintballs (defaults: `0`, `1`, `2`, `3`).
 - `BLOCKS_PER_TICK` sets how many blocks are checked per tick (default: `50`).
 
 ### 『 Code to copy 』
 
 ```js
 const WE_OWNER = "K4miNoK4mi"
-const axeSlot = 0, rotateSlot = 1
+const axeSlot = 0, rotateSlot = 1, setRotSlot = 2, setHalfSlot = 3
 const ROTATION_STEPS = 4
 let pos1 = null, pos2 = null, bounds = null
 let isBuilding = false, totalRotated = 0
 let curX, curY, curZ
 let targetBase = null
+let targetRotation = 1     // rotation chosen with the Blue Paintball (1..4)
+let targetHalf = "top"     // half placement chosen with the Yellow Paintball
+let applyRotation = 1      // rotation applied by the current setRotation build
+let applyHalf = "top"      // half placement applied by the current setHalf build
+let buildMode = "rotate"   // "rotate" | "setRotation" | "setHalf"
 const rotated = new Map()
 
 function isWE(pid){
@@ -59,27 +72,39 @@ function currentRotation(name){
   return 0
 }
 
-// Compute the next rotation name, keeping every meta suffix (meta, top, bot, side, ...),
-// or null when the base block does not exist.
-function rotationTarget(name){
-  if(rotated.has(name)) return rotated.get(name)
+// Cycle the half-block placement: top -> bot -> side -> none -> top
+function nextHalf(current){
+  const order = ["top", "bot", "side", ""]
+  const index = order.indexOf(current)
+  return order[(index + 1) % order.length]
+}
+
+// Compute a rotation name with rotValue (1..4), keeping every meta suffix
+// (meta, top, bot, side, ...), or null when the base block does not exist.
+// rotValue is null in "rotate +1" mode: the next value is computed instead.
+function rotationTarget(name, rotValue){
+  const key = name + "|rot" + (rotValue ?? "next")
+  if(rotated.has(key)) return rotated.get(key)
   const parts = String(name ?? "").split("|")
   const base = parts[0]
-  const current = currentRotation(name)
-  const next = current >= ROTATION_STEPS ? 1 : current + 1
+
+  if(rotValue === null || rotValue === undefined){
+    rotValue = currentRotation(name)
+    rotValue = rotValue >= ROTATION_STEPS ? 1 : rotValue + 1
+  }
 
   let candidate
   const rotIndex = parts.findIndex((part) => /^rot\d+$/.test(part))
   if(rotIndex !== -1){
     // Only bump the rot value, keep the rest of the name untouched.
-    parts[rotIndex] = "rot" + next
+    parts[rotIndex] = "rot" + rotValue
     candidate = parts.join("|")
   } else {
     // No rotation yet: insert "|meta|rotN" after the base name
     // (or right after the meta segment when one exists).
     const metaIndex = parts.indexOf("meta")
     const insertAt = metaIndex >= 0 ? metaIndex + 1 : 1
-    parts.splice(insertAt, 0, "meta", "rot" + next)
+    parts.splice(insertAt, 0, "meta", "rot" + rotValue)
     candidate = parts.join("|")
   }
 
@@ -90,7 +115,39 @@ function rotationTarget(name){
     // variant only skips its own block instead of blocking the whole selection.
     if(api.blockNameToBlockId(base) > 0) target = candidate
   } catch(e) { /* No block of this name: leave the original alone. */ }
-  rotated.set(name, target)
+  rotated.set(key, target)
+  return target
+}
+
+// Compute a name with the half-block placement (top/bot/side/none) applied,
+// keeping meta and rotation, or null when the base block does not exist.
+function halfTarget(name, halfValue){
+  const key = name + "|half" + (halfValue || "none")
+  if(rotated.has(key)) return rotated.get(key)
+  const parts = String(name ?? "").split("|")
+  const base = parts[0]
+
+  // A half placement needs the meta + rotation segments: add them if missing.
+  if(!parts.includes("meta")){
+    const rotValue = currentRotation(name) || 1
+    parts.splice(1, 0, "meta", "rot" + rotValue)
+  }
+
+  // Replace (or remove) the existing half slot.
+  const halfIndex = parts.findIndex((part) => part === "top" || part === "bot" || part === "side")
+  if(halfValue){
+    if(halfIndex !== -1) parts[halfIndex] = halfValue
+    else parts.push(halfValue)
+  } else if(halfIndex !== -1){
+    parts.splice(halfIndex, 1)
+  }
+
+  const candidate = parts.join("|")
+  let target = null
+  try {
+    if(api.blockNameToBlockId(base) > 0) target = candidate
+  } catch(e) { /* No block of this name: leave the original alone. */ }
+  rotated.set(key, target)
   return target
 }
 
@@ -120,7 +177,17 @@ onPlayerJoin = (pid) => {
 
   api.setItemSlot(pid, rotateSlot, "Green Paintball", 1, {
     customDisplayName: "Rotate Tool",
-    customDescription: "Click: Rotate selection"
+    customDescription: "Click: Rotate selection (+1)"
+  })
+
+  api.setItemSlot(pid, setRotSlot, "Blue Paintball", 1, {
+    customDisplayName: "Set Rotation",
+    customDescription: "Click: Set rotation directly (rot1-rot4)"
+  })
+
+  api.setItemSlot(pid, setHalfSlot, "Yellow Paintball", 1, {
+    customDisplayName: "Set Half Placement",
+    customDescription: "Click: Set top/bot/side directly"
   })
 }
 
@@ -155,30 +222,47 @@ onPlayerClick = (pid, wasAltClick) => {
   if(held.name === "Green Paintball"){
     // The pointed block defines which type of block to rotate.
     targetBase = baseName(api.getBlock(x, y, z))
-    startRotate(pid)
+    buildMode = "rotate"
+    startBuild(pid)
+  }
+
+  if(held.name === "Blue Paintball"){
+    // Apply the current target rotation; the cycle happens when the build finishes.
+    applyRotation = targetRotation
+    targetBase = baseName(api.getBlock(x, y, z))
+    buildMode = "setRotation"
+    startBuild(pid)
+  }
+
+  if(held.name === "Yellow Paintball"){
+    // Apply the current target half placement; the cycle happens when the build finishes.
+    applyHalf = targetHalf
+    targetBase = baseName(api.getBlock(x, y, z))
+    buildMode = "setHalf"
+    startBuild(pid)
   }
 }
 
 ///////////////////////////////////////////////////////////
-// ROTATE
+// START BUILD
 ///////////////////////////////////////////////////////////
 
-function startRotate(pid){
+function startBuild(pid){
   const b = getBounds()
 
   if(!b){
     api.sendMessage(pid, "Define pos1/pos2!", {color:"red"})
-    return
+    return false
   }
 
   if(isBuilding){
     api.sendMessage(pid, "Already running!", {color:"orange"})
-    return
+    return false
   }
 
   if(!targetBase){
     api.sendMessage(pid, "Point at a block first!", {color:"red"})
-    return
+    return false
   }
 
   bounds = b
@@ -189,7 +273,24 @@ function startRotate(pid){
   isBuilding = true
 
   const vol = (b.maxX-b.minX+1) * (b.maxY-b.minY+1) * (b.maxZ-b.minZ+1)
-  api.sendMessage(pid, "Rotation started (volume: " + vol + " blocks)…", {color:"green"})
+
+  if(buildMode === "setRotation"){
+    api.sendMessage(
+      pid,
+      "Rotation set to rot" + applyRotation + " (volume: " + vol + " blocks)…",
+      {color:"blue"}
+    )
+  } else if(buildMode === "setHalf"){
+    api.sendMessage(
+      pid,
+      "Half placement set to " + (applyHalf || "none") + " (volume: " + vol + " blocks)…",
+      {color:"yellow"}
+    )
+  } else {
+    api.sendMessage(pid, "Rotation started (volume: " + vol + " blocks)…", {color:"green"})
+  }
+
+  return true
 }
 
 ///////////////////////////////////////////////////////////
@@ -207,8 +308,20 @@ tick = () => {
   while(processed < BLOCKS_PER_TICK){
 
     const current = api.getBlock(curX, curY, curZ)
-    const target = baseName(current) === targetBase ? rotationTarget(current) : null
-    if(target){
+
+    let target = null
+    if(baseName(current) === targetBase){
+      if(buildMode === "setRotation"){
+        target = rotationTarget(current, applyRotation)
+      } else if(buildMode === "setHalf"){
+        target = halfTarget(current, applyHalf)
+      } else {
+        target = rotationTarget(current, null)
+      }
+    }
+
+    // Skip blocks that are already in the wanted state.
+    if(target && target !== current){
       try {
         api.setBlock(curX, curY, curZ, target)
         totalRotated++
@@ -225,13 +338,35 @@ tick = () => {
         curY++
         if(curY > b.maxY){
           isBuilding = false
-          api.broadcastMessage(
-            "Rotation finished! (" + totalRotated + " blocks rotated)",
-            {color:"green"}
-          )
+
+          if(buildMode === "setRotation"){
+            api.broadcastMessage(
+              "Rotation applied! (" + totalRotated + " blocks set to rot" + applyRotation + ")",
+              {color:"blue"}
+            )
+          } else if(buildMode === "setHalf"){
+            api.broadcastMessage(
+              "Half placement applied! (" + totalRotated + " blocks set to "
+              + (applyHalf || "none") + ")",
+              {color:"yellow"}
+            )
+          } else {
+            api.broadcastMessage(
+              "Rotation finished! (" + totalRotated + " blocks rotated)",
+              {color:"green"}
+            )
+          }
+
+          // Cycle the target for the next direct-set click.
+          if(buildMode === "setRotation"){
+            targetRotation = (targetRotation % ROTATION_STEPS) + 1
+          } else if(buildMode === "setHalf"){
+            targetHalf = nextHalf(targetHalf)
+          }
+
           if(totalRotated === 0){
             api.broadcastMessage(
-              "Nothing rotated: the pointed block type must exist in the selection "
+              "Nothing changed: the pointed block type must exist in the selection "
               + "and its rotated variant must be a valid block name.",
               {color:"orange"}
             )
