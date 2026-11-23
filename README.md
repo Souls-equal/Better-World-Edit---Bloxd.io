@@ -48,6 +48,8 @@ Simple World Edit tools for Bloxd.io, with standalone tool versions in `TOOLS/` 
 
 ㅤ◈ㅤ[Rotation Tool](TOOLS/Rotation-Tool.md) — rotate every block of a type by one step in a selection.
 
+ㅤ◈ㅤ[Cube Gradient Tool](TOOLS/Cube-Gradient-Tool.md) — fill a cuboid with a block gradient.
+
 ## 〖〔 Full In One Version 〕〗
 
 ### 『 Notice 』
