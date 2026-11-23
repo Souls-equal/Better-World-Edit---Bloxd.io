@@ -46,6 +46,8 @@ Simple World Edit tools for Bloxd.io, with standalone tool versions in `TOOLS/` 
 
 ㅤ◈ㅤ[Wood Swap Tool](TOOLS/Wood-Swap-Tool.md) — replace one wood species with another in a selection.
 
+ㅤ◈ㅤ[Rotation Tool](TOOLS/Rotation-Tool.md) — rotate every block of a type by one step in a selection.
+
 ## 〖〔 Full In One Version 〕〗
 
 ### 『 Notice 』
